@@ -57,11 +57,25 @@
           </div>
 
           <div
+            x-show="submissionError"
+            x-cloak
+            role="alert"
+            class="rounded-2xl border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-700"
+          >
+            <div class="flex items-start gap-2">
+              <i data-lucide="circle-alert" class="mt-0.5 h-4 w-4 shrink-0" aria-hidden="true"></i>
+              <span x-text="submissionError"></span>
+            </div>
+          </div>
+
+          <div
             class="flex items-center justify-end space-x-3 pt-4 border-t border-borderui"
           >
             <button
               type="button"
               @click="showSubmitModal = false"
+              :disabled="isSubmitting"
+              :class="isSubmitting ? 'cursor-not-allowed opacity-50' : ''"
               class="px-4 py-2.5 rounded-xl border border-borderui text-sm font-medium text-txsecondary hover:text-txprimary hover:bg-[#F0F4F2] transition-colors"
             >
               Kiểm tra lại
@@ -69,10 +83,18 @@
             <button
               type="button"
               @click="executeSubmit()"
+              :disabled="isSubmitting"
+              :aria-busy="isSubmitting"
+              :class="isSubmitting ? 'cursor-wait opacity-80' : ''"
               class="px-6 py-2.5 rounded-xl bg-[#003c33] hover:bg-[#064e43] text-white text-sm font-semibold transition-all shadow-card flex items-center space-x-2"
             >
-              <i data-lucide="check" class="w-4 h-4 text-[#9fe870]"></i>
-              <span>Xác nhận gửi</span>
+              <i
+                :data-lucide="isSubmitting ? 'loader-circle' : 'check'"
+                :class="isSubmitting ? 'animate-spin' : ''"
+                class="w-4 h-4 text-[#9fe870]"
+                aria-hidden="true"
+              ></i>
+              <span x-text="isSubmitting ? 'Đang gửi dữ liệu...' : 'Xác nhận gửi'"></span>
             </button>
           </div>
         </div>

@@ -56,9 +56,12 @@ function ghgApp() {
           pendingDeleteIndex: null,
           showSubmitModal: false,
           isSubmitted: false,
+          isSubmitting: false,
+          submissionError: "",
           submittedDataReceipt: {
             code: "",
             time: "",
+            excel_url: "",
           },
 
           // Errors map: fieldKey -> message
@@ -506,6 +509,19 @@ function ghgApp() {
               full_charge_kg: 10,
               recharge_kg: 2,
             };
+            y25.scope1_sources = [
+              {
+                id: "src_takigawa_2",
+                source_type: "Đốt nhiên liệu di động",
+                source_type_other: "",
+                fuel_type: "Dầu DO",
+                fuel_type_other: "",
+                quantity: 15000,
+                unit: "lít",
+                unit_other: "",
+                note: "Phương tiện vận tải của Công ty",
+              },
+            ];
             y25.grid_electricity_kwh = 3400000;
             y25.solar_electricity_kwh = 300000;
             y25.energy_toe = 1850;
@@ -534,6 +550,19 @@ function ghgApp() {
               full_charge_kg: 10,
               recharge_kg: 2,
             };
+            y26.scope1_sources = [
+              {
+                id: "src_takigawa_3",
+                source_type: "Đốt nhiên liệu di động",
+                source_type_other: "",
+                fuel_type: "Dầu DO",
+                fuel_type_other: "",
+                quantity: 15000,
+                unit: "lít",
+                unit_other: "",
+                note: "Phương tiện vận tải của Công ty",
+              },
+            ];
             y26.grid_electricity_kwh = 3800000;
             y26.solar_electricity_kwh = 290000;
             y26.energy_toe = 1880;
@@ -1079,6 +1108,7 @@ function ghgApp() {
           // Submission Modal and Action
           openSubmitConfirmationModal() {
             if (this.validateCurrentStep()) {
+              this.submissionError = "";
               this.showSubmitModal = true;
               this.$nextTick(() => {
                 if (window.lucide) lucide.createIcons();
@@ -1087,21 +1117,10 @@ function ghgApp() {
           },
 
           async executeSubmit() {
-            this.showSubmitModal = false;
+            if (this.isSubmitting) return;
 
-            // Generate formal receipt fallback
-            const randomId = Math.floor(100000 + Math.random() * 900000);
-            const now = new Date();
-            const dateStr = now.toLocaleDateString("vi-VN");
-            const timeStr = now.toLocaleTimeString("vi-VN", {
-              hour: "2-digit",
-              minute: "2-digit",
-            });
-
-            this.submittedDataReceipt = {
-              code: "GHG-2026-" + randomId,
-              time: dateStr + " " + timeStr,
-            };
+            this.isSubmitting = true;
+            this.submissionError = "";
 
             // Send to Laravel Backend
             try {
@@ -1115,23 +1134,44 @@ function ghgApp() {
                 },
                 body: JSON.stringify({ formData: this.formData })
               });
-              if (response.ok) {
-                const result = await response.json();
-                if (result.receipt) {
-                  this.submittedDataReceipt = result.receipt;
-                }
+
+              const result = await response.json();
+
+              if (!response.ok) {
+                const serverErrors = result.errors || {};
+                this.errors = Object.fromEntries(
+                  Object.entries(serverErrors).map(([key, messages]) => [
+                    key.replace(/^formData\./, ""),
+                    Array.isArray(messages) ? messages[0] : messages,
+                  ]),
+                );
+
+                throw new Error(
+                  response.status === 422
+                    ? "Dữ liệu chưa hợp lệ. Vui lòng đóng hộp thoại và kiểm tra lại các trường được đánh dấu."
+                    : "Hệ thống chưa thể tiếp nhận hồ sơ. Vui lòng thử lại.",
+                );
               }
+
+              this.submittedDataReceipt = result.receipt;
+              this.showSubmitModal = false;
+              this.isSubmitted = true;
+              this.saveDraft(false);
+
+              window.scrollTo({ top: 0, behavior: "smooth" });
+              this.$nextTick(() => {
+                if (window.lucide) lucide.createIcons();
+              });
             } catch (e) {
-              console.warn("Lưu backend tạm thời gián đoạn:", e);
+              console.error("Không thể gửi hồ sơ:", e);
+              this.submissionError =
+                e instanceof Error
+                  ? e.message
+                  : "Hệ thống chưa thể tiếp nhận hồ sơ. Vui lòng thử lại.";
+              this.showToast(this.submissionError);
+            } finally {
+              this.isSubmitting = false;
             }
-
-            this.isSubmitted = true;
-            this.saveDraft(false);
-
-            window.scrollTo({ top: 0, behavior: "smooth" });
-            this.$nextTick(() => {
-              if (window.lucide) lucide.createIcons();
-            });
           },
 
           printReceipt() {

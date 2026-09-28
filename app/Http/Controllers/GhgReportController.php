@@ -2,10 +2,14 @@
 
 namespace App\Http\Controllers;
 
+use App\Http\Requests\StoreGhgSubmissionRequest;
 use App\Models\GhgSubmission;
+use App\Services\GhgSubmissionExcelExporter;
 use Illuminate\Http\JsonResponse;
-use Illuminate\Http\Request;
+use Illuminate\Support\Facades\URL;
+use Illuminate\Support\Str;
 use Illuminate\View\View;
+use Symfony\Component\HttpFoundation\BinaryFileResponse;
 
 class GhgReportController extends Controller
 {
@@ -20,27 +24,26 @@ class GhgReportController extends Controller
     /**
      * Store a newly submitted GHG inventory record.
      */
-    public function store(Request $request): JsonResponse
+    public function store(StoreGhgSubmissionRequest $request): JsonResponse
     {
-        $validated = $request->validate([
-            'formData' => ['required', 'array'],
-            'formData.company.name' => ['required', 'string'],
-            'formData.company.tax_id' => ['nullable', 'string'],
-            'formData.reporting_years' => ['required', 'array'],
-        ]);
-
-        $randomSuffix = random_int(100000, 999999);
-        $code = 'GHG-2026-' . $randomSuffix;
+        $formData = $request->validated('formData');
+        $code = 'GHG-'.now()->format('Y').'-'.Str::upper(Str::random(10));
 
         $submission = GhgSubmission::create([
             'code' => $code,
-            'company_name' => $validated['formData']['company']['name'] ?? 'Không xác định',
-            'tax_id' => $validated['formData']['company']['tax_id'] ?? null,
-            'reporting_years' => $validated['formData']['reporting_years'] ?? [],
-            'data' => $validated['formData'],
+            'company_name' => $formData['company']['name'],
+            'tax_id' => $formData['company']['tax_code'],
+            'reporting_years' => $formData['reporting_years'],
+            'data' => $formData,
             'status' => 'submitted',
             'ip_address' => $request->ip(),
         ]);
+
+        $excelUrl = URL::temporarySignedRoute(
+            'submissions.excel',
+            now()->addDay(),
+            ['submission' => $submission->code]
+        );
 
         return response()->json([
             'success' => true,
@@ -50,7 +53,21 @@ class GhgReportController extends Controller
                 'time' => $submission->created_at->format('d/m/Y H:i'),
                 'company' => $submission->company_name,
                 'tax_id' => $submission->tax_id,
+                'excel_url' => $excelUrl,
             ],
-        ]);
+        ], 201);
+    }
+
+    public function downloadExcel(
+        GhgSubmission $submission,
+        GhgSubmissionExcelExporter $exporter
+    ): BinaryFileResponse {
+        $path = $exporter->export($submission);
+
+        return response()->download(
+            $path,
+            $exporter->downloadName($submission),
+            ['Content-Type' => 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet']
+        )->deleteFileAfterSend();
     }
 }
