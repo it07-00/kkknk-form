@@ -5,6 +5,7 @@
       aria-labelledby="submit-modal-title"
       role="dialog"
       aria-modal="true"
+      @keydown.escape.window="if (!isSubmitting) showSubmitModal = false"
     >
       <div
         class="fixed inset-0 bg-[#091710]/50 backdrop-blur-sm transition-opacity"
@@ -72,6 +73,7 @@
             class="flex items-center justify-end space-x-3 pt-4 border-t border-borderui"
           >
             <button
+              x-ref="submitCancelButton"
               type="button"
               @click="showSubmitModal = false"
               :disabled="isSubmitting"

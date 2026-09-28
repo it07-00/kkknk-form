@@ -20,8 +20,8 @@
         @include('forms.partials.intro-card')
 
         <!-- MAIN STEPPING FORM -->
-        <form @submit.prevent="nextStep()" novalidate class="space-y-6">
-          
+        <form @submit.prevent="handleNext()" id="ghgMainForm" novalidate class="space-y-6">
+
           <!-- STEP 1: THÔNG TIN DOANH NGHIỆP -->
           @include('forms.partials.step-1-company')
 

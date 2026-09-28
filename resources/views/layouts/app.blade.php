@@ -122,11 +122,32 @@
         border-color: #003c33;
       }
 
+      html {
+        scroll-padding-top: 7rem;
+      }
+
+      button:focus-visible,
+      a:focus-visible,
+      [role="radio"]:focus-visible {
+        outline: 3px solid #003c33;
+        outline-offset: 3px;
+      }
+
+      @media (prefers-reduced-motion: reduce) {
+        *,
+        *::before,
+        *::after {
+          scroll-behavior: auto !important;
+          animation-duration: 0.01ms !important;
+          animation-iteration-count: 1 !important;
+          transition-duration: 0.01ms !important;
+        }
+      }
+
       @media print {
         header,
         aside,
         .sticky,
-        #error-summary-banner,
         button:not(.print-include),
         nav {
           display: none !important;

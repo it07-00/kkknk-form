@@ -12,7 +12,7 @@ function ghgApp() {
             {
               number: 2,
               title: "Kỳ kiểm kê",
-              desc: "Chọn năm 2024, 2025 hoặc cả hai",
+              desc: "Chọn kỳ báo cáo trong giai đoạn 2024–2026",
             },
             {
               number: 3,
@@ -41,7 +41,7 @@ function ghgApp() {
             },
           ],
 
-          // Reporting option in Step 2: '2024', '2025', 'both'
+          // Reporting option in Step 2
           reportingOption: "both",
           activeScope1Year: "2024",
 
@@ -62,7 +62,10 @@ function ghgApp() {
             code: "",
             time: "",
             excel_url: "",
+            report_file_url: "",
+            report_file_name: "",
           },
+          mitigationReportFile: null,
 
           // Errors map: fieldKey -> message
           errors: {},
@@ -95,7 +98,7 @@ function ghgApp() {
 
             inventory: {
               2024: {
-                has_scope1: null,
+                has_scope1: true,
                 has_boiler: false,
                 boiler: {
                   capacity: "",
@@ -124,7 +127,7 @@ function ghgApp() {
                 report_url: "",
               },
               2025: {
-                has_scope1: null,
+                has_scope1: true,
                 has_boiler: false,
                 boiler: {
                   capacity: "",
@@ -153,7 +156,7 @@ function ghgApp() {
                 report_url: "",
               },
               2026: {
-                has_scope1: null,
+                has_scope1: true,
                 has_boiler: false,
                 boiler: {
                   capacity: "",
@@ -236,7 +239,7 @@ function ghgApp() {
             for (const yr of this.formData.reporting_years) {
               total += 3;
               const inv = this.formData.inventory[yr];
-              if (inv.has_scope1 !== null) filled++;
+              if (inv.scope1_sources.length > 0) filled++;
               if (
                 inv.grid_electricity_kwh !== null &&
                 inv.grid_electricity_kwh !== ""
@@ -256,6 +259,7 @@ function ghgApp() {
           initApp() {
             // Check for existing draft in localStorage
             this.loadDraft();
+            this.initializeScopeOneData();
 
             // Initialize active Scope 1 year
             if (this.formData.reporting_years.length > 0) {
@@ -321,6 +325,11 @@ function ghgApp() {
             } catch (e) {
               console.error("Failed to autosave to localStorage:", e);
               this.saveState = "idle";
+              if (showNotice) {
+                this.showToast(
+                  "Không thể lưu bản nháp trên trình duyệt này. Vui lòng thử lại.",
+                );
+              }
             }
           },
 
@@ -330,11 +339,18 @@ function ghgApp() {
               if (raw) {
                 const data = JSON.parse(raw);
                 if (data.formData) {
-                  this.formData = Object.assign(this.formData, data.formData);
-                  if (data.reportingOption)
-                    this.reportingOption = data.reportingOption;
-                  if (data.completedSteps)
-                    this.completedSteps = data.completedSteps;
+                  this.formData = this.normalizeDraftFormData(data.formData);
+                  this.reportingOption = this.reportingOptionForYears(
+                    this.formData.reporting_years,
+                  );
+                  this.currentStep = Number.isInteger(data.currentStep)
+                    ? Math.min(7, Math.max(1, data.currentStep))
+                    : 1;
+                  this.completedSteps = Array.isArray(data.completedSteps)
+                    ? data.completedSteps.filter(
+                        (step) => Number.isInteger(step) && step >= 1 && step <= 7,
+                      )
+                    : [];
                   if (data.savedAt) {
                     const d = new Date(data.savedAt);
                     this.lastSavedTime = d.toLocaleTimeString([], {
@@ -348,6 +364,129 @@ function ghgApp() {
             } catch (e) {
               console.warn("Draft not loaded or invalid format:", e);
             }
+          },
+
+          mergeKnownDraftShape(defaultValue, draftValue) {
+            if (Array.isArray(defaultValue)) {
+              return Array.isArray(draftValue) ? draftValue : defaultValue;
+            }
+
+            if (
+              defaultValue !== null &&
+              typeof defaultValue === "object" &&
+              !Array.isArray(defaultValue)
+            ) {
+              const draftObject =
+                draftValue !== null && typeof draftValue === "object"
+                  ? draftValue
+                  : {};
+
+              return Object.fromEntries(
+                Object.entries(defaultValue).map(([key, value]) => [
+                  key,
+                  this.mergeKnownDraftShape(value, draftObject[key]),
+                ]),
+              );
+            }
+
+            if (defaultValue === null) {
+              return draftValue === null ||
+                typeof draftValue === "string" ||
+                typeof draftValue === "number" ||
+                typeof draftValue === "boolean"
+                ? draftValue
+                : null;
+            }
+
+            return typeof draftValue === typeof defaultValue
+              ? draftValue
+              : defaultValue;
+          },
+
+          normalizeDraftFormData(draftFormData) {
+            const normalized = this.mergeKnownDraftShape(
+              this.formData,
+              draftFormData,
+            );
+            const allowedYears = ["2024", "2025", "2026"];
+            const reportingYears = Array.isArray(normalized.reporting_years)
+              ? [...new Set(normalized.reporting_years.map(String))].filter(
+                  (year) => allowedYears.includes(year),
+                )
+              : [];
+
+            normalized.reporting_years =
+              reportingYears.length > 0 ? reportingYears : ["2024", "2025"];
+
+            const sourceDefaults = {
+              id: "",
+              source_type: "",
+              source_type_other: "",
+              fuel_type: "",
+              fuel_type_other: "",
+              quantity: null,
+              unit: "",
+              unit_other: "",
+              note: "",
+            };
+
+            for (const year of allowedYears) {
+              normalized.inventory[year].has_scope1 = true;
+              const sources = normalized.inventory[year].scope1_sources;
+              normalized.inventory[year].scope1_sources = Array.isArray(sources)
+                ? sources
+                    .filter(
+                      (source) => source !== null && typeof source === "object",
+                    )
+                    .map((source) =>
+                      this.mergeKnownDraftShape(sourceDefaults, source),
+                    )
+                : [];
+            }
+
+            return normalized;
+          },
+
+          initializeScopeOneData() {
+            for (const year of ["2024", "2025", "2026"]) {
+              this.ensureYearInventory(year);
+              this.formData.inventory[year].has_scope1 = true;
+
+              if (this.formData.inventory[year].scope1_sources.length === 0) {
+                this.formData.inventory[year].scope1_sources.push(
+                  this.newScope1Source(),
+                );
+              }
+            }
+          },
+
+          newScope1Source() {
+            return {
+              id:
+                "src_" +
+                Date.now() +
+                "_" +
+                Math.random().toString(36).slice(2, 6),
+              source_type: "",
+              source_type_other: "",
+              fuel_type: "",
+              fuel_type_other: "",
+              quantity: null,
+              unit: "",
+              unit_other: "",
+              note: "",
+            };
+          },
+
+          reportingOptionForYears(years) {
+            const signature = [...years].sort().join(",");
+
+            if (signature === "2024") return "2024";
+            if (signature === "2025") return "2025";
+            if (signature === "2026") return "2026";
+            if (signature === "2024,2025,2026") return "2024_2026";
+
+            return "both";
           },
 
           showToast(msg) {
@@ -384,13 +523,19 @@ function ghgApp() {
             for (const yr of this.formData.reporting_years) {
               this.ensureYearInventory(yr);
             }
+            for (const key of Object.keys(this.errors)) {
+              const match = key.match(/^inventory\.(2024|2025|2026)\./);
+              if (match && !this.formData.reporting_years.includes(match[1])) {
+                delete this.errors[key];
+              }
+            }
             this.clearFieldError("reporting_years");
           },
 
           ensureYearInventory(yr) {
             if (!this.formData.inventory[yr]) {
               this.formData.inventory[yr] = {
-                has_scope1: null,
+                has_scope1: true,
                 has_boiler: false,
                 boiler: {
                   capacity: "",
@@ -409,7 +554,7 @@ function ghgApp() {
                   full_charge_kg: null,
                   recharge_kg: null,
                 },
-                scope1_sources: [],
+                scope1_sources: [this.newScope1Source()],
                 grid_electricity_kwh: null,
                 solar_electricity_kwh: null,
                 energy_toe: null,
@@ -430,6 +575,48 @@ function ghgApp() {
               this.formData.mitigation.plan_2026_2030 += "\n" + text;
             }
             this.showToast("Đã thêm biện pháp vào kế hoạch");
+          },
+
+          handleMitigationReportFile(event) {
+            this.mitigationReportFile = event.target.files?.[0] || null;
+            this.clearFieldError("mitigation_report_file");
+
+            if (this.mitigationReportFile) {
+              this.validateMitigationReportFile();
+            }
+          },
+
+          removeMitigationReportFile() {
+            this.mitigationReportFile = null;
+            this.clearFieldError("mitigation_report_file");
+
+            if (this.$refs.mitigationReportInput) {
+              this.$refs.mitigationReportInput.value = "";
+            }
+          },
+
+          validateMitigationReportFile() {
+            if (!this.mitigationReportFile) return true;
+
+            const allowedExtensions = ["pdf", "doc", "docx", "xls", "xlsx"];
+            const extension = this.mitigationReportFile.name
+              .split(".")
+              .pop()
+              ?.toLowerCase();
+
+            if (!extension || !allowedExtensions.includes(extension)) {
+              this.errors.mitigation_report_file =
+                "File báo cáo chỉ chấp nhận định dạng PDF, Word hoặc Excel.";
+              return false;
+            }
+
+            if (this.mitigationReportFile.size > 10 * 1024 * 1024) {
+              this.errors.mitigation_report_file =
+                "File báo cáo không được lớn hơn 10 MB.";
+              return false;
+            }
+
+            return true;
           },
 
           fillTakigawaSampleData() {
@@ -586,36 +773,10 @@ function ghgApp() {
           },
 
           // Scope 1 Helpers (Step 3)
-          setScope1Presence(year, hasIt) {
-            this.formData.inventory[year].has_scope1 = hasIt;
-            if (
-              hasIt &&
-              this.formData.inventory[year].scope1_sources.length === 0
-            ) {
-              this.addScope1Source(year);
-            }
-            this.clearFieldError("inventory." + year + ".has_scope1");
-            this.$nextTick(() => {
-              if (window.lucide) lucide.createIcons();
-            });
-          },
-
           addScope1Source(year) {
-            this.formData.inventory[year].scope1_sources.push({
-              id:
-                "src_" +
-                Date.now() +
-                "_" +
-                Math.random().toString(36).substr(2, 4),
-              source_type: "",
-              source_type_other: "",
-              fuel_type: "",
-              fuel_type_other: "",
-              quantity: null,
-              unit: "",
-              unit_other: "",
-              note: "",
-            });
+            this.formData.inventory[year].scope1_sources.push(
+              this.newScope1Source(),
+            );
             this.$nextTick(() => {
               if (window.lucide) lucide.createIcons();
             });
@@ -623,11 +784,10 @@ function ghgApp() {
 
           openDeleteSourceModal(year, index) {
             if (
-              this.formData.inventory[year].scope1_sources.length <= 1 &&
-              this.formData.inventory[year].has_scope1 === true
+              this.formData.inventory[year].scope1_sources.length <= 1
             ) {
               alert(
-                'Không thể xóa nguồn phát thải duy nhất khi đã chọn "Có phát sinh nguồn phát thải". Nếu không có nguồn nào, vui lòng chọn lại tùy chọn "Không có nguồn phát thải".',
+                "Phạm vi 1 luôn phải có ít nhất một nguồn phát thải. Vui lòng cập nhật nguồn hiện tại hoặc thêm nguồn mới trước khi xóa.",
               );
               return;
             }
@@ -636,6 +796,7 @@ function ghgApp() {
             this.showDeleteModal = true;
             this.$nextTick(() => {
               if (window.lucide) lucide.createIcons();
+              this.$refs.deleteCancelButton?.focus();
             });
           },
 
@@ -662,14 +823,14 @@ function ghgApp() {
           jumpToStep(stepNumber) {
             if (this.canNavigateTo(stepNumber)) {
               this.currentStep = stepNumber;
-              window.scrollTo({ top: 0, behavior: "smooth" });
+              window.scrollTo({ top: 0, behavior: this.scrollBehavior() });
             }
           },
 
           prevStep() {
             if (this.currentStep > 1) {
               this.currentStep--;
-              window.scrollTo({ top: 0, behavior: "smooth" });
+              window.scrollTo({ top: 0, behavior: this.scrollBehavior() });
             }
           },
 
@@ -680,7 +841,7 @@ function ghgApp() {
               }
               if (this.currentStep < 7) {
                 this.currentStep++;
-                window.scrollTo({ top: 0, behavior: "smooth" });
+                window.scrollTo({ top: 0, behavior: this.scrollBehavior() });
               }
             }
           },
@@ -690,13 +851,37 @@ function ghgApp() {
             return !!this.errors[fieldKey];
           },
 
+          hasErrorPrefix(fieldPrefix) {
+            return Object.keys(this.errors).some(
+              (key) => key === fieldPrefix || key.startsWith(fieldPrefix + "."),
+            );
+          },
+
           getErrorMessage(fieldKey) {
             return this.errors[fieldKey] || "";
+          },
+
+          getFirstErrorMessage(fieldPrefix) {
+            const key = Object.keys(this.errors).find(
+              (errorKey) =>
+                errorKey === fieldPrefix ||
+                errorKey.startsWith(fieldPrefix + "."),
+            );
+
+            return key ? this.errors[key] : "";
           },
 
           clearFieldError(fieldKey) {
             if (this.errors[fieldKey]) {
               delete this.errors[fieldKey];
+            }
+          },
+
+          clearErrorsByPrefix(fieldPrefix) {
+            for (const key of Object.keys(this.errors)) {
+              if (key === fieldPrefix || key.startsWith(fieldPrefix + ".")) {
+                delete this.errors[key];
+              }
             }
           },
 
@@ -803,6 +988,14 @@ function ghgApp() {
           },
 
           focusFieldByKey(key) {
+            const stepNumber = this.stepForField(key);
+            this.currentStep = stepNumber;
+
+            const inventoryMatch = key.match(/^inventory\.(2024|2025|2026)\./);
+            if (inventoryMatch && stepNumber === 3) {
+              this.activeScope1Year = inventoryMatch[1];
+            }
+
             let elemId = null;
             if (key === "company.name") elemId = "company_name";
             else if (key === "company.tax_code") elemId = "company_tax_code";
@@ -815,6 +1008,8 @@ function ghgApp() {
               elemId = "technical_contact_name";
             else if (key === "company.technical_contact.phone")
               elemId = "technical_contact_phone";
+            else if (key.includes(".scope1_sources"))
+              elemId = "scope1_sources_" + key.split(".")[1];
             else if (key.includes("grid_electricity_kwh"))
               elemId = key
                 .replace("inventory.", "grid_elec_")
@@ -823,22 +1018,69 @@ function ghgApp() {
               elemId = key
                 .replace("inventory.", "solar_elec_")
                 .replace(".solar_electricity_kwh", "");
-            else if (key.includes("report_url"))
+            else if (key.includes("energy_toe"))
+              elemId = key
+                .replace("inventory.", "energy_toe_")
+                .replace(".energy_toe", "");
+            else if (key.includes("scope1_emissions"))
+              elemId = key
+                .replace("inventory.", "scope1_em_")
+                .replace(".scope1_emissions", "");
+            else if (key.includes("scope2_emissions"))
+              elemId = key
+                .replace("inventory.", "scope2_em_")
+                .replace(".scope2_emissions", "");
+            else if (
+              key.startsWith("inventory.") &&
+              key.includes("report_url")
+            )
               elemId = key
                 .replace("inventory.", "report_url_")
                 .replace(".report_url", "");
+            else if (key === "mitigation.implemented_measures")
+              elemId = "implemented_measures";
+            else if (key === "mitigation.planned_reduction_tco2e")
+              elemId = "planned_red";
+            else if (key === "mitigation.actual_reduction_tco2e")
+              elemId = "actual_red";
+            else if (key === "mitigation.report_url")
+              elemId = "mitigation_report_url";
+            else if (key === "mitigation_report_file")
+              elemId = "mitigation_report_file";
 
-            if (elemId) {
+            this.$nextTick(() => {
+              if (!elemId) return;
+
               const el = document.getElementById(elemId);
               if (el) {
-                el.scrollIntoView({ behavior: "smooth", block: "center" });
+                el.scrollIntoView({
+                  behavior: this.scrollBehavior(),
+                  block: "center",
+                });
                 el.focus();
               }
-            }
+            });
           },
 
-          validateCurrentStep() {
-            this.errors = {};
+          stepForField(key) {
+            if (key === "company" || key.startsWith("company.")) return 1;
+            if (key.startsWith("reporting_years")) return 2;
+            if (key.includes(".has_scope1") || key.includes(".scope1_sources") || key.includes(".boiler") || key.includes(".refrigeration")) return 3;
+            if (key.includes("grid_electricity_kwh") || key.includes("solar_electricity_kwh") || key.includes("energy_toe")) return 4;
+            if (key.includes("scope1_emissions") || key.includes("scope2_emissions") || key.includes("report_method") || key.includes("report_url") && key.startsWith("inventory.")) return 5;
+            if (key === "inventory" || key.startsWith("inventory.")) return 3;
+            if (key.startsWith("mitigation.")) return 6;
+            if (key === "mitigation_report_file") return 6;
+
+            return 7;
+          },
+
+          validateCurrentStep(
+            stepNumber = this.currentStep,
+            resetErrors = true,
+            focusOnError = true,
+          ) {
+            if (resetErrors) this.errors = {};
             let isValid = true;
             let firstErrorElement = null;
 
@@ -851,7 +1093,7 @@ function ghgApp() {
             };
 
             // STEP 1 VALIDATION
-            if (this.currentStep === 1) {
+            if (stepNumber === 1) {
               const c = this.formData.company;
               if (!c.name || !c.name.trim())
                 markError(
@@ -934,7 +1176,7 @@ function ghgApp() {
             }
 
             // STEP 2 VALIDATION
-            if (this.currentStep === 2) {
+            if (stepNumber === 2) {
               if (
                 !this.formData.reporting_years ||
                 this.formData.reporting_years.length === 0
@@ -947,20 +1189,86 @@ function ghgApp() {
             }
 
             // STEP 3 VALIDATION
-            if (this.currentStep === 3) {
+            if (stepNumber === 3) {
               for (const yr of this.formData.reporting_years) {
                 const inv = this.formData.inventory[yr];
-                if (inv.has_scope1 === null) {
-                  markError(
-                    "inventory." + yr + ".has_scope1",
-                    "Vui lòng xác nhận có phát sinh nguồn phát thải Phạm vi 1 trong năm " +
-                      yr +
-                      " hay không.",
-                  );
-                } else if (inv.has_scope1 === true) {
+                if (inv.has_boiler) {
+                    const boiler = inv.boiler;
+                    if (!boiler.capacity || !boiler.capacity.trim()) {
+                      markError(
+                        "inventory." + yr + ".boiler.capacity",
+                        "Vui lòng nhập công suất thiết kế lò hơi cho năm " + yr + ".",
+                      );
+                    }
+                    if (!boiler.fuel) {
+                      markError(
+                        "inventory." + yr + ".boiler.fuel",
+                        "Vui lòng chọn nhiên liệu đốt lò hơi cho năm " + yr + ".",
+                      );
+                    }
+                    if (boiler.fuel === "Khác" && (!boiler.fuel_other || !boiler.fuel_other.trim())) {
+                      markError(
+                        "inventory." + yr + ".boiler.fuel_other",
+                        "Vui lòng nêu rõ nhiên liệu đốt lò hơi khác cho năm " + yr + ".",
+                      );
+                    }
+                    if (boiler.consumption === null || boiler.consumption === "" || isNaN(boiler.consumption) || Number(boiler.consumption) < 0) {
+                      markError(
+                        "inventory." + yr + ".boiler.consumption",
+                        "Lượng đốt lò hơi năm " + yr + " phải là số lớn hơn hoặc bằng 0.",
+                      );
+                    }
+                    if (!boiler.unit) {
+                      markError(
+                        "inventory." + yr + ".boiler.unit",
+                        "Vui lòng chọn đơn vị lượng đốt lò hơi cho năm " + yr + ".",
+                      );
+                    }
+                  }
+
+                  if (inv.has_cooling) {
+                    const refrigeration = inv.refrigeration;
+                    if (!refrigeration.equipment) {
+                      markError(
+                        "inventory." + yr + ".refrigeration.equipment",
+                        "Vui lòng chọn thiết bị lạnh sử dụng cho năm " + yr + ".",
+                      );
+                    }
+                    if (refrigeration.equipment === "Khác" && (!refrigeration.equipment_other || !refrigeration.equipment_other.trim())) {
+                      markError(
+                        "inventory." + yr + ".refrigeration.equipment_other",
+                        "Vui lòng nêu rõ thiết bị lạnh khác cho năm " + yr + ".",
+                      );
+                    }
+                    if (!refrigeration.capacity || !refrigeration.capacity.trim()) {
+                      markError(
+                        "inventory." + yr + ".refrigeration.capacity",
+                        "Vui lòng nhập công suất lạnh cho năm " + yr + ".",
+                      );
+                    }
+                    if (!refrigeration.gas_type) {
+                      markError(
+                        "inventory." + yr + ".refrigeration.gas_type",
+                        "Vui lòng chọn môi chất lạnh cho năm " + yr + ".",
+                      );
+                    }
+                    if (refrigeration.gas_type === "Khác" && (!refrigeration.gas_type_other || !refrigeration.gas_type_other.trim())) {
+                      markError(
+                        "inventory." + yr + ".refrigeration.gas_type_other",
+                        "Vui lòng nêu rõ môi chất lạnh khác cho năm " + yr + ".",
+                      );
+                    }
+                    if (refrigeration.full_charge_kg === null || refrigeration.full_charge_kg === "" || isNaN(refrigeration.full_charge_kg) || Number(refrigeration.full_charge_kg) < 0) {
+                      markError(
+                        "inventory." + yr + ".refrigeration.full_charge_kg",
+                        "Lượng gas nạp đầy năm " + yr + " phải là số lớn hơn hoặc bằng 0.",
+                      );
+                    }
+                  }
+
                   if (!inv.scope1_sources || inv.scope1_sources.length === 0) {
                     markError(
-                      "inventory." + yr + ".has_scope1",
+                      "inventory." + yr + ".scope1_sources",
                       "Vui lòng thêm ít nhất một nguồn phát thải cho năm " +
                         yr +
                         ".",
@@ -971,19 +1279,27 @@ function ghgApp() {
                       const src = inv.scope1_sources[i];
                       if (!src.source_type) {
                         markError(
-                          "inventory." + yr + ".scope1_sources",
+                          "inventory." + yr + ".scope1_sources." + i + ".source_type",
                           "Vui lòng chọn loại nguồn phát thải ở nguồn #" +
                             (i + 1),
                         );
-                        break;
+                      } else if (src.source_type === "Khác" && (!src.source_type_other || !src.source_type_other.trim())) {
+                        markError(
+                          "inventory." + yr + ".scope1_sources." + i + ".source_type_other",
+                          "Vui lòng nêu rõ loại nguồn phát thải khác ở nguồn #" + (i + 1),
+                        );
                       }
                       if (!src.fuel_type) {
                         markError(
-                          "inventory." + yr + ".scope1_sources",
+                          "inventory." + yr + ".scope1_sources." + i + ".fuel_type",
                           "Vui lòng chọn loại nhiên liệu / chất sử dụng ở nguồn #" +
                             (i + 1),
                         );
-                        break;
+                      } else if (src.fuel_type === "Khác" && (!src.fuel_type_other || !src.fuel_type_other.trim())) {
+                        markError(
+                          "inventory." + yr + ".scope1_sources." + i + ".fuel_type_other",
+                          "Vui lòng nêu rõ nhiên liệu / chất khác ở nguồn #" + (i + 1),
+                        );
                       }
                       if (
                         src.quantity === null ||
@@ -992,28 +1308,30 @@ function ghgApp() {
                         Number(src.quantity) < 0
                       ) {
                         markError(
-                          "inventory." + yr + ".scope1_sources",
+                          "inventory." + yr + ".scope1_sources." + i + ".quantity",
                           "Lượng sử dụng ở nguồn #" +
                             (i + 1) +
                             " phải là số lớn hơn hoặc bằng 0.",
                         );
-                        break;
                       }
                       if (!src.unit) {
                         markError(
-                          "inventory." + yr + ".scope1_sources",
+                          "inventory." + yr + ".scope1_sources." + i + ".unit",
                           "Vui lòng chọn đơn vị tính ở nguồn #" + (i + 1),
                         );
-                        break;
+                      } else if (src.unit === "Khác" && (!src.unit_other || !src.unit_other.trim())) {
+                        markError(
+                          "inventory." + yr + ".scope1_sources." + i + ".unit_other",
+                          "Vui lòng nêu rõ đơn vị tính khác ở nguồn #" + (i + 1),
+                        );
                       }
                     }
-                  }
                 }
               }
             }
 
             // STEP 4 VALIDATION
-            if (this.currentStep === 4) {
+            if (stepNumber === 4) {
               for (const yr of this.formData.reporting_years) {
                 const inv = this.formData.inventory[yr];
                 if (
@@ -1042,14 +1360,40 @@ function ghgApp() {
                     "solar_elec_" + yr,
                   );
                 }
+                if (this.isInvalidOptionalNonNegativeNumber(inv.energy_toe)) {
+                  markError(
+                    "inventory." + yr + ".energy_toe",
+                    "Tổng năng lượng quy đổi TOE năm " + yr + " phải là số lớn hơn hoặc bằng 0.",
+                    "energy_toe_" + yr,
+                  );
+                }
               }
             }
 
             // STEP 5 VALIDATION
-            if (this.currentStep === 5) {
+            if (stepNumber === 5) {
               for (const yr of this.formData.reporting_years) {
                 const inv = this.formData.inventory[yr];
-                if (inv.report_method === "Dán link báo cáo") {
+                if (this.isInvalidOptionalNonNegativeNumber(inv.scope1_emissions)) {
+                  markError(
+                    "inventory." + yr + ".scope1_emissions",
+                    "Phát thải Phạm vi 1 năm " + yr + " phải là số lớn hơn hoặc bằng 0.",
+                    "scope1_em_" + yr,
+                  );
+                }
+                if (this.isInvalidOptionalNonNegativeNumber(inv.scope2_emissions)) {
+                  markError(
+                    "inventory." + yr + ".scope2_emissions",
+                    "Phát thải Phạm vi 2 năm " + yr + " phải là số lớn hơn hoặc bằng 0.",
+                    "scope2_em_" + yr,
+                  );
+                }
+                if (!inv.report_method) {
+                  markError(
+                    "inventory." + yr + ".report_method",
+                    "Vui lòng chọn hình thức cung cấp báo cáo cho năm " + yr,
+                  );
+                } else if (inv.report_method === "Dán link báo cáo") {
                   if (!inv.report_url || !inv.report_url.trim()) {
                     markError(
                       "inventory." + yr + ".report_url",
@@ -1068,17 +1412,65 @@ function ghgApp() {
             }
 
             // STEP 6 VALIDATION
-            if (this.currentStep === 6) {
+            if (stepNumber === 6) {
               if (this.formData.mitigation.implemented === null) {
                 markError(
                   "mitigation.implemented",
                   "Vui lòng chọn tình trạng thực hiện biện pháp giảm nhẹ.",
                 );
+              } else if (
+                this.formData.mitigation.implemented === true &&
+                (!this.formData.mitigation.implemented_measures ||
+                  !this.formData.mitigation.implemented_measures.trim())
+              ) {
+                markError(
+                  "mitigation.implemented_measures",
+                  "Vui lòng mô tả các biện pháp giảm nhẹ đã thực hiện.",
+                  "implemented_measures",
+                );
+              }
+              if (
+                this.isInvalidOptionalNonNegativeNumber(
+                  this.formData.mitigation.planned_reduction_tco2e,
+                )
+              ) {
+                markError(
+                  "mitigation.planned_reduction_tco2e",
+                  "Lượng phát thải dự kiến cắt giảm phải là số lớn hơn hoặc bằng 0.",
+                  "planned_red",
+                );
+              }
+              if (
+                this.isInvalidOptionalNonNegativeNumber(
+                  this.formData.mitigation.actual_reduction_tco2e,
+                )
+              ) {
+                markError(
+                  "mitigation.actual_reduction_tco2e",
+                  "Lượng phát thải thực tế cắt giảm phải là số lớn hơn hoặc bằng 0.",
+                  "actual_red",
+                );
+              }
+              if (
+                this.formData.mitigation.report_url &&
+                !this.isHttpUrl(this.formData.mitigation.report_url)
+              ) {
+                markError(
+                  "mitigation.report_url",
+                  "Đường dẫn báo cáo giảm nhẹ phải bắt đầu bằng http:// hoặc https://.",
+                  "mitigation_report_url",
+                );
+              }
+              if (!this.validateMitigationReportFile()) {
+                isValid = false;
+                firstErrorElement ||= document.getElementById(
+                  "mitigation_report_file",
+                );
               }
             }
 
             // STEP 7 VALIDATION
-            if (this.currentStep === 7) {
+            if (stepNumber === 7) {
               if (!this.formData.confirmation) {
                 markError(
                   "confirmation",
@@ -1088,30 +1480,54 @@ function ghgApp() {
             }
 
             // Auto-scroll and focus first error if any
-            if (!isValid) {
+            if (!isValid && focusOnError) {
               this.$nextTick(() => {
-                if (firstErrorElement) {
-                  firstErrorElement.scrollIntoView({
-                    behavior: "smooth",
-                    block: "center",
-                  });
-                  firstErrorElement.focus();
-                } else {
-                  window.scrollTo({ top: 300, behavior: "smooth" });
-                }
+                firstErrorElement?.scrollIntoView({
+                  behavior: this.scrollBehavior(),
+                  block: "center",
+                });
+                firstErrorElement?.focus();
               });
             }
 
             return isValid;
           },
 
+          validateEntireForm() {
+            this.errors = {};
+            let firstInvalidStep = null;
+
+            for (let stepNumber = 1; stepNumber <= 7; stepNumber++) {
+              if (!this.validateCurrentStep(stepNumber, false, false)) {
+                firstInvalidStep ??= stepNumber;
+              }
+            }
+
+            if (firstInvalidStep !== null) {
+              this.currentStep = firstInvalidStep;
+              const firstErrorKey = Object.keys(this.errors)[0];
+              const inventoryMatch = firstErrorKey?.match(
+                /^inventory\.(2024|2025|2026)\./,
+              );
+              if (inventoryMatch && firstInvalidStep === 3) {
+                this.activeScope1Year = inventoryMatch[1];
+              }
+              this.focusFieldByKey(firstErrorKey);
+
+              return false;
+            }
+
+            return true;
+          },
+
           // Submission Modal and Action
           openSubmitConfirmationModal() {
-            if (this.validateCurrentStep()) {
+            if (this.validateEntireForm()) {
               this.submissionError = "";
               this.showSubmitModal = true;
               this.$nextTick(() => {
                 if (window.lucide) lucide.createIcons();
+                this.$refs.submitCancelButton?.focus();
               });
             }
           },
@@ -1125,14 +1541,23 @@ function ghgApp() {
             // Send to Laravel Backend
             try {
               const csrfToken = document.querySelector('meta[name="csrf-token"]')?.getAttribute('content');
+              const payload = new FormData();
+              payload.append("formData", JSON.stringify(this.formData));
+
+              if (this.mitigationReportFile) {
+                payload.append(
+                  "mitigation_report_file",
+                  this.mitigationReportFile,
+                );
+              }
+
               const response = await fetch('/api/submissions', {
                 method: 'POST',
                 headers: {
-                  'Content-Type': 'application/json',
                   'Accept': 'application/json',
                   'X-CSRF-TOKEN': csrfToken || '',
                 },
-                body: JSON.stringify({ formData: this.formData })
+                body: payload,
               });
 
               const result = await response.json();
@@ -1146,6 +1571,21 @@ function ghgApp() {
                   ]),
                 );
 
+                const firstErrorKey = Object.keys(this.errors)[0];
+                if (firstErrorKey) {
+                  this.showSubmitModal = false;
+                  this.currentStep = this.stepForField(firstErrorKey);
+
+                  const inventoryMatch = firstErrorKey.match(
+                    /^inventory\.(2024|2025|2026)\./,
+                  );
+                  if (inventoryMatch && this.currentStep === 3) {
+                    this.activeScope1Year = inventoryMatch[1];
+                  }
+
+                  this.focusFieldByKey(firstErrorKey);
+                }
+
                 throw new Error(
                   response.status === 422
                     ? "Dữ liệu chưa hợp lệ. Vui lòng đóng hộp thoại và kiểm tra lại các trường được đánh dấu."
@@ -1156,9 +1596,10 @@ function ghgApp() {
               this.submittedDataReceipt = result.receipt;
               this.showSubmitModal = false;
               this.isSubmitted = true;
-              this.saveDraft(false);
+              localStorage.removeItem("ghg_inventory_form_draft");
+              this.saveState = "idle";
 
-              window.scrollTo({ top: 0, behavior: "smooth" });
+              window.scrollTo({ top: 0, behavior: this.scrollBehavior() });
               this.$nextTick(() => {
                 if (window.lucide) lucide.createIcons();
               });
@@ -1192,6 +1633,35 @@ function ghgApp() {
           formatNumber(val) {
             if (val === null || val === undefined || val === "") return "0";
             return new Intl.NumberFormat("vi-VN").format(val);
+          },
+
+          formatFileSize(bytes) {
+            if (!Number.isFinite(bytes) || bytes <= 0) return "0 KB";
+
+            if (bytes < 1024 * 1024) {
+              return `${Math.max(1, Math.round(bytes / 1024))} KB`;
+            }
+
+            return `${(bytes / (1024 * 1024)).toFixed(1)} MB`;
+          },
+
+          isInvalidOptionalNonNegativeNumber(value) {
+            return (
+              value !== null &&
+              value !== "" &&
+              (isNaN(value) || Number(value) < 0)
+            );
+          },
+
+          isHttpUrl(value) {
+            return /^https?:\/\/.+/i.test(String(value).trim());
+          },
+
+          scrollBehavior() {
+            return window.matchMedia?.("(prefers-reduced-motion: reduce)")
+              .matches
+              ? "auto"
+              : "smooth";
           },
         };
       }

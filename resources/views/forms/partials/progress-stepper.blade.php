@@ -29,6 +29,7 @@
                 <button
                   @click="jumpToStep(st.number)"
                   type="button"
+                  :aria-current="currentStep === st.number ? 'step' : null"
                   :class="{
                         'bg-[#003c33] text-white shadow-pine': currentStep === st.number,
                         'bg-[#F0F6F3] text-[#003c33] hover:bg-[#E4EFEA] border border-[#003c33]/15': completedSteps.includes(st.number) && currentStep !== st.number,
@@ -104,10 +105,10 @@
             <div
               class="pt-2 border-t border-white/10 flex items-center justify-between text-xs text-white/70"
             >
-              <span>Bảo mật dữ liệu 100%</span>
+              <span>Bản nháp lưu trên thiết bị</span>
               <span class="text-[#9fe870] font-semibold flex items-center">
                 <i data-lucide="lock" class="w-3 h-3 mr-1 text-[#9fe870]"></i>
-                An toàn
+                Lưu cục bộ
               </span>
             </div>
           </div>

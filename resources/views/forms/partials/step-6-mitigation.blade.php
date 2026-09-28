@@ -22,15 +22,22 @@
 
                 <!-- Question: Doanh nghiệp đã thực hiện biện pháp giảm nhẹ chưa? -->
                 <div>
-                  <label class="block text-sm font-medium text-txprimary mb-3">
+                  <label id="mitigation_status_label" class="block text-sm font-medium text-txprimary mb-3">
                     Doanh nghiệp đã thực hiện biện pháp giảm nhẹ phát thải khí
                     nhà kính chưa? <span class="text-danger">*</span>
                   </label>
 
-                  <div class="grid grid-cols-1 sm:grid-cols-2 gap-4 max-w-lg">
+                  <div
+                    class="grid grid-cols-1 sm:grid-cols-2 gap-4 max-w-lg"
+                    role="radiogroup"
+                    aria-labelledby="mitigation_status_label"
+                  >
                     <div
-                      @click="formData.mitigation.implemented = true"
+                      @click="formData.mitigation.implemented = true; clearFieldError('mitigation.implemented')"
+                      @keydown.enter.prevent="formData.mitigation.implemented = true; clearFieldError('mitigation.implemented')"
+                      @keydown.space.prevent="formData.mitigation.implemented = true; clearFieldError('mitigation.implemented')"
                       role="radio"
+                      tabindex="0"
                       :aria-checked="formData.mitigation.implemented === true"
                       class="p-4 rounded-2xl border-2 cursor-pointer transition-all flex items-center justify-between"
                       :class="formData.mitigation.implemented === true ? 'border-[#003c33] bg-[#003c33]/5 ring-1 ring-[#003c33] text-[#003c33] font-bold shadow-card' : 'border-borderui bg-white hover:border-[#003c33]/30 hover:bg-[#F8FAF9] text-txprimary'"
@@ -56,8 +63,11 @@
                     </div>
 
                     <div
-                      @click="formData.mitigation.implemented = false"
+                      @click="formData.mitigation.implemented = false; clearFieldError('mitigation.implemented')"
+                      @keydown.enter.prevent="formData.mitigation.implemented = false; clearFieldError('mitigation.implemented')"
+                      @keydown.space.prevent="formData.mitigation.implemented = false; clearFieldError('mitigation.implemented')"
                       role="radio"
+                      tabindex="0"
                       :aria-checked="formData.mitigation.implemented === false"
                       class="p-4 rounded-2xl border-2 cursor-pointer transition-all flex items-center justify-between"
                       :class="formData.mitigation.implemented === false ? 'border-[#003c33] bg-[#003c33]/5 ring-1 ring-[#003c33] text-[#003c33] font-bold shadow-card' : 'border-borderui bg-white hover:border-[#003c33]/30 hover:bg-[#F8FAF9] text-txprimary'"
@@ -125,14 +135,24 @@
                       class="block text-sm font-medium text-txprimary mb-1.5"
                     >
                       Các biện pháp giảm nhẹ đã thực hiện
+                      <span class="text-danger">*</span>
                     </label>
                     <textarea
                       id="implemented_measures"
                       rows="3"
                       x-model="formData.mitigation.implemented_measures"
+                      @input="clearFieldError('mitigation.implemented_measures')"
+                      :aria-invalid="hasError('mitigation.implemented_measures') ? 'true' : 'false'"
+                      :aria-describedby="hasError('mitigation.implemented_measures') ? 'implemented_measures_error' : null"
                       placeholder="Ví dụ: sử dụng năng lượng tái tạo, nâng cấp thiết bị tiết kiệm năng lượng, bảo dưỡng định kỳ hệ thống lạnh..."
                       class="w-full p-3.5 rounded-xl border border-borderui bg-white text-sm focus-ring transition-all"
                     ></textarea>
+                    <template x-if="hasError('mitigation.implemented_measures')">
+                      <p id="implemented_measures_error" class="text-xs text-danger mt-1.5 flex items-center space-x-1" role="alert">
+                        <i data-lucide="alert-circle" class="w-3.5 h-3.5" aria-hidden="true"></i>
+                        <span x-text="getErrorMessage('mitigation.implemented_measures')"></span>
+                      </p>
+                    </template>
                   </div>
 
                   <!-- Numbers: Planned and Actual Reduction (tCO2e) -->
@@ -152,6 +172,8 @@
                           step="any"
                           min="0"
                           x-model.number="formData.mitigation.planned_reduction_tco2e"
+                          @input="clearFieldError('mitigation.planned_reduction_tco2e')"
+                          :aria-invalid="hasError('mitigation.planned_reduction_tco2e') ? 'true' : 'false'"
                           placeholder="Ví dụ: 350"
                           class="w-full h-12 pl-4 pr-28 rounded-xl border border-borderui bg-white text-sm font-mono focus-ring transition-all"
                         />
@@ -160,6 +182,9 @@
                           >tấn CO₂e</span
                         >
                       </div>
+                      <template x-if="hasError('mitigation.planned_reduction_tco2e')">
+                        <p class="text-xs text-danger mt-1.5" role="alert" x-text="getErrorMessage('mitigation.planned_reduction_tco2e')"></p>
+                      </template>
                     </div>
 
                     <!-- Lượng thực tế đã cắt giảm -->
@@ -177,6 +202,8 @@
                           step="any"
                           min="0"
                           x-model.number="formData.mitigation.actual_reduction_tco2e"
+                          @input="clearFieldError('mitigation.actual_reduction_tco2e')"
+                          :aria-invalid="hasError('mitigation.actual_reduction_tco2e') ? 'true' : 'false'"
                           placeholder="Ví dụ: 120"
                           class="w-full h-12 pl-4 pr-28 rounded-xl border border-borderui bg-white text-sm font-mono focus-ring transition-all"
                         />
@@ -185,6 +212,9 @@
                           >tấn CO₂e</span
                         >
                       </div>
+                      <template x-if="hasError('mitigation.actual_reduction_tco2e')">
+                        <p class="text-xs text-danger mt-1.5" role="alert" x-text="getErrorMessage('mitigation.actual_reduction_tco2e')"></p>
+                      </template>
                     </div>
 
                     <!-- Hiệu quả % giảm nhẹ so với kế hoạch (Tự động tính toán - Khớp cột K file Excel) -->
@@ -326,6 +356,8 @@
                         type="url"
                         id="mitigation_report_url"
                         x-model="formData.mitigation.report_url"
+                        @input="clearFieldError('mitigation.report_url')"
+                        :aria-invalid="hasError('mitigation.report_url') ? 'true' : 'false'"
                         placeholder="https://..."
                         class="w-full h-12 pl-11 pr-4 rounded-xl border border-borderui bg-white text-sm font-mono focus-ring transition-all"
                       />
@@ -334,6 +366,67 @@
                         class="w-4 h-4 text-[#003c33] absolute left-4 top-4"
                       ></i>
                     </div>
+                    <template x-if="hasError('mitigation.report_url')">
+                      <p class="text-xs text-danger mt-1.5" role="alert" x-text="getErrorMessage('mitigation.report_url')"></p>
+                    </template>
+                  </div>
+
+                  <!-- File Báo cáo / Kế hoạch / Kết quả giảm nhẹ -->
+                  <div class="rounded-2xl border border-dashed border-[#003c33]/35 bg-[#F8FAF9] p-4 sm:p-5">
+                    <label
+                      for="mitigation_report_file"
+                      class="block text-sm font-semibold text-txprimary"
+                    >
+                      Tải file Báo cáo / Kế hoạch / Kết quả giảm nhẹ
+                      <span class="text-txsecondary font-normal">(Tùy chọn)</span>
+                    </label>
+                    <p id="mitigation_report_file_help" class="mt-1 text-xs leading-relaxed text-txsecondary">
+                      Chấp nhận PDF, Word hoặc Excel; dung lượng tối đa 10 MB. File được lưu riêng tư và chỉ tải xuống qua liên kết bảo vệ.
+                    </p>
+
+                    <div class="mt-3 flex flex-col gap-3 sm:flex-row sm:items-center">
+                      <input
+                        x-ref="mitigationReportInput"
+                        id="mitigation_report_file"
+                        name="mitigation_report_file"
+                        type="file"
+                        accept=".pdf,.doc,.docx,.xls,.xlsx"
+                        @change="handleMitigationReportFile($event)"
+                        :aria-invalid="hasError('mitigation_report_file') ? 'true' : 'false'"
+                        :aria-describedby="hasError('mitigation_report_file') ? 'mitigation_report_file_help mitigation_report_file_error' : 'mitigation_report_file_help'"
+                        class="block w-full text-sm text-txsecondary file:mr-4 file:min-h-11 file:rounded-xl file:border-0 file:bg-[#003c33] file:px-4 file:py-2.5 file:text-sm file:font-semibold file:text-white hover:file:bg-[#064e43] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#003c33] focus-visible:ring-offset-2"
+                      />
+                    </div>
+
+                    <template x-if="mitigationReportFile">
+                      <div class="mt-3 flex items-center justify-between gap-3 rounded-xl border border-borderui bg-white p-3 shadow-sm">
+                        <div class="flex min-w-0 items-center gap-3">
+                          <div class="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-[#003c33]/10 text-[#003c33]">
+                            <i data-lucide="file-check-2" class="h-5 w-5" aria-hidden="true"></i>
+                          </div>
+                          <div class="min-w-0">
+                            <p class="truncate text-sm font-semibold text-txprimary" x-text="mitigationReportFile.name"></p>
+                            <p class="text-xs text-txsecondary" x-text="formatFileSize(mitigationReportFile.size)"></p>
+                          </div>
+                        </div>
+                        <button
+                          type="button"
+                          @click="removeMitigationReportFile()"
+                          class="inline-flex min-h-11 shrink-0 items-center gap-1.5 rounded-xl px-3 text-xs font-semibold text-danger hover:bg-red-50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-danger focus-visible:ring-offset-2"
+                          aria-label="Bỏ file báo cáo đã chọn"
+                        >
+                          <i data-lucide="trash-2" class="h-4 w-4" aria-hidden="true"></i>
+                          <span>Bỏ file</span>
+                        </button>
+                      </div>
+                    </template>
+
+                    <template x-if="hasError('mitigation_report_file')">
+                      <p id="mitigation_report_file_error" class="mt-2 flex items-center gap-1 text-xs text-danger" role="alert">
+                        <i data-lucide="alert-circle" class="h-3.5 w-3.5" aria-hidden="true"></i>
+                        <span x-text="getErrorMessage('mitigation_report_file')"></span>
+                      </p>
+                    </template>
                   </div>
                 </div>
               </div>

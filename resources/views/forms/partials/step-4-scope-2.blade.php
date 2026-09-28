@@ -222,6 +222,8 @@
                               step="any"
                               min="0"
                               x-model.number="formData.inventory[yr].energy_toe"
+                              @input="clearFieldError('inventory.' + yr + '.energy_toe')"
+                              :aria-invalid="hasError('inventory.' + yr + '.energy_toe') ? 'true' : 'false'"
                               placeholder="Ví dụ: 1900 (Nếu chưa có thể ước tính hoặc để trống)"
                               class="w-full h-12 pl-4 pr-28 rounded-xl border border-borderui bg-white text-txprimary text-sm font-mono focus-ring transition-all"
                             />
@@ -230,6 +232,12 @@
                               >TOE/năm</span
                             >
                           </div>
+                          <template x-if="hasError('inventory.' + yr + '.energy_toe')">
+                            <p class="text-xs text-danger mt-1.5 flex items-center space-x-1" role="alert">
+                              <i data-lucide="alert-circle" class="w-3.5 h-3.5" aria-hidden="true"></i>
+                              <span x-text="getErrorMessage('inventory.' + yr + '.energy_toe')"></span>
+                            </p>
+                          </template>
                           <p class="text-xs text-txsecondary mt-1.5">
                             <strong>Tấn dầu tương đương (TOE):</strong> Tổng
                             điện và nhiên liệu tiêu thụ quy đổi theo Luật Sử

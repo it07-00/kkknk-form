@@ -109,6 +109,15 @@
               <i data-lucide="file-spreadsheet" class="w-4 h-4 mr-2 text-[#9fe870]" aria-hidden="true"></i>
               Tải báo cáo Excel
             </a>
+            <a
+              x-show="submittedDataReceipt.report_file_url"
+              :href="submittedDataReceipt.report_file_url"
+              class="w-full sm:w-auto inline-flex items-center justify-center px-5 py-2.5 rounded-xl border border-[#003c33] bg-white text-[#003c33] hover:bg-[#F0F6F3] font-semibold text-sm transition-colors shadow-subtle"
+              :aria-label="'Tải file báo cáo đã gửi ' + (submittedDataReceipt.report_file_name || '')"
+            >
+              <i data-lucide="download" class="w-4 h-4 mr-2" aria-hidden="true"></i>
+              Tải file đã gửi
+            </a>
             <button
               @click="isSubmitted = false; currentStep = 7"
               type="button"

@@ -19,14 +19,16 @@
                   </p>
                 </div>
 
-                <!-- Selectable Cards (2024, 2025, or Both) -->
+                <!-- Selectable reporting-period cards -->
                 <div>
-                  <label class="block text-sm font-medium text-txprimary mb-3">
+                  <label id="reporting_period_label" class="block text-sm font-medium text-txprimary mb-3">
                     Chọn kỳ kiểm kê báo cáo <span class="text-danger">*</span>
                   </label>
 
                   <div
-                    class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4"
+                    class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-4 pt-3"
+                    role="radiogroup"
+                    aria-labelledby="reporting_period_label"
                   >
                     <!-- Option: 2024 -->
                     <div
@@ -35,17 +37,18 @@
                       tabindex="0"
                       :aria-checked="reportingOption === '2024'"
                       @keydown.space.prevent="selectReportingOption('2024')"
+                      @keydown.enter.prevent="selectReportingOption('2024')"
                       class="relative p-5 rounded-2xl border-2 cursor-pointer transition-all duration-200 flex flex-col justify-between"
                       :class="reportingOption === '2024' ? 'border-[#003c33] bg-[#003c33]/5 ring-1 ring-[#003c33] shadow-card' : 'border-borderui bg-white hover:border-[#003c33]/30 hover:bg-[#F8FAF9]'"
                     >
                       <div class="flex items-start justify-between">
                         <div
-                          class="w-11 h-11 rounded-2xl bg-[#003c33]/10 text-[#003c33] flex items-center justify-center font-bold"
+                          class="w-11 h-11 rounded-2xl bg-[#003c33]/10 text-[#003c33] flex items-center justify-center font-bold shrink-0"
                         >
                           <i data-lucide="calendar" class="w-5 h-5"></i>
                         </div>
                         <div
-                          class="w-6 h-6 rounded-full border flex items-center justify-center transition-all"
+                          class="w-6 h-6 rounded-full border flex items-center justify-center shrink-0 transition-all"
                           :class="reportingOption === '2024' ? 'border-[#003c33] bg-[#003c33] text-[#9fe870]' : 'border-borderui bg-white'"
                         >
                           <i
@@ -75,17 +78,18 @@
                       tabindex="0"
                       :aria-checked="reportingOption === '2025'"
                       @keydown.space.prevent="selectReportingOption('2025')"
+                      @keydown.enter.prevent="selectReportingOption('2025')"
                       class="relative p-5 rounded-2xl border-2 cursor-pointer transition-all duration-200 flex flex-col justify-between"
                       :class="reportingOption === '2025' ? 'border-[#003c33] bg-[#003c33]/5 ring-1 ring-[#003c33] shadow-card' : 'border-borderui bg-white hover:border-[#003c33]/30 hover:bg-[#F8FAF9]'"
                     >
                       <div class="flex items-start justify-between">
                         <div
-                          class="w-11 h-11 rounded-2xl bg-[#003c33]/10 text-[#003c33] flex items-center justify-center font-bold"
+                          class="w-11 h-11 rounded-2xl bg-[#003c33]/10 text-[#003c33] flex items-center justify-center font-bold shrink-0"
                         >
                           <i data-lucide="calendar" class="w-5 h-5"></i>
                         </div>
                         <div
-                          class="w-6 h-6 rounded-full border flex items-center justify-center transition-all"
+                          class="w-6 h-6 rounded-full border flex items-center justify-center shrink-0 transition-all"
                           :class="reportingOption === '2025' ? 'border-[#003c33] bg-[#003c33] text-[#9fe870]' : 'border-borderui bg-white'"
                         >
                           <i
@@ -108,6 +112,41 @@
                       </div>
                     </div>
 
+                    <!-- Option: 2026 -->
+                    <div
+                      @click="selectReportingOption('2026')"
+                      role="radio"
+                      tabindex="0"
+                      :aria-checked="reportingOption === '2026'"
+                      @keydown.space.prevent="selectReportingOption('2026')"
+                      @keydown.enter.prevent="selectReportingOption('2026')"
+                      class="relative p-5 rounded-2xl border-2 cursor-pointer transition-all duration-200 flex flex-col justify-between"
+                      :class="reportingOption === '2026' ? 'border-[#003c33] bg-[#003c33]/5 ring-1 ring-[#003c33] shadow-card' : 'border-borderui bg-white hover:border-[#003c33]/30 hover:bg-[#F8FAF9]'"
+                    >
+                      <div class="flex items-start justify-between">
+                        <div class="w-11 h-11 rounded-2xl bg-[#003c33]/10 text-[#003c33] flex items-center justify-center font-bold shrink-0">
+                          <i data-lucide="calendar" class="w-5 h-5" aria-hidden="true"></i>
+                        </div>
+                        <div
+                          class="w-6 h-6 rounded-full border flex items-center justify-center shrink-0 transition-all"
+                          :class="reportingOption === '2026' ? 'border-[#003c33] bg-[#003c33] text-[#9fe870]' : 'border-borderui bg-white'"
+                        >
+                          <i
+                            x-show="reportingOption === '2026'"
+                            data-lucide="check"
+                            class="w-4 h-4"
+                            aria-hidden="true"
+                          ></i>
+                        </div>
+                      </div>
+                      <div class="mt-5">
+                        <div class="text-base font-bold text-txprimary">Năm 2026</div>
+                        <p class="text-xs text-txsecondary mt-1 leading-relaxed">
+                          Chỉ khai báo số liệu hoạt động và phát thải cho năm 2026.
+                        </p>
+                      </div>
+                    </div>
+
                     <!-- Option: Both 2024 & 2025 -->
                     <div
                       @click="selectReportingOption('both')"
@@ -115,30 +154,30 @@
                       tabindex="0"
                       :aria-checked="reportingOption === 'both'"
                       @keydown.space.prevent="selectReportingOption('both')"
+                      @keydown.enter.prevent="selectReportingOption('both')"
                       class="relative p-5 rounded-2xl border-2 cursor-pointer transition-all duration-200 flex flex-col justify-between"
                       :class="reportingOption === 'both' ? 'border-[#003c33] bg-[#003c33]/5 ring-1 ring-[#003c33] shadow-card' : 'border-borderui bg-white hover:border-[#003c33]/30 hover:bg-[#F8FAF9]'"
                     >
-                      <div class="flex items-center justify-between">
+                      <span
+                        class="absolute -top-3 left-1/2 -translate-x-1/2 px-2.5 py-0.5 rounded-full text-[11px] font-bold tracking-wide uppercase bg-[#9fe870] text-[#003c33] border border-[#003c33]/15 shadow-sm whitespace-nowrap z-10"
+                      >
+                        Khuyên dùng
+                      </span>
+                      <div class="flex items-start justify-between">
                         <div
-                          class="w-11 h-11 rounded-2xl bg-[#9fe870]/30 text-[#003c33] flex items-center justify-center font-bold"
+                          class="w-11 h-11 rounded-2xl bg-[#9fe870]/30 text-[#003c33] flex items-center justify-center font-bold shrink-0"
                         >
                           <i data-lucide="calendar-range" class="w-5 h-5"></i>
                         </div>
-                        <div class="flex items-center space-x-2">
-                          <span
-                            class="px-2.5 py-0.5 rounded-full text-xs font-extrabold bg-[#9fe870] text-[#003c33] shadow-sm"
-                            >Khuyên dùng</span
-                          >
-                          <div
-                            class="w-6 h-6 rounded-full border flex items-center justify-center transition-all"
-                            :class="reportingOption === 'both' ? 'border-[#003c33] bg-[#003c33] text-[#9fe870]' : 'border-borderui bg-white'"
-                          >
-                            <i
-                              x-show="reportingOption === 'both'"
-                              data-lucide="check"
-                              class="w-4 h-4"
-                            ></i>
-                          </div>
+                        <div
+                          class="w-6 h-6 rounded-full border flex items-center justify-center shrink-0 transition-all"
+                          :class="reportingOption === 'both' ? 'border-[#003c33] bg-[#003c33] text-[#9fe870]' : 'border-borderui bg-white'"
+                        >
+                          <i
+                            x-show="reportingOption === 'both'"
+                            data-lucide="check"
+                            class="w-4 h-4"
+                          ></i>
                         </div>
                       </div>
                       <div class="mt-5">
@@ -161,30 +200,30 @@
                       tabindex="0"
                       :aria-checked="reportingOption === '2024_2026'"
                       @keydown.space.prevent="selectReportingOption('2024_2026')"
+                      @keydown.enter.prevent="selectReportingOption('2024_2026')"
                       class="relative p-5 rounded-2xl border-2 cursor-pointer transition-all duration-200 flex flex-col justify-between"
                       :class="reportingOption === '2024_2026' ? 'border-[#003c33] bg-[#003c33]/5 ring-1 ring-[#003c33] shadow-card' : 'border-borderui bg-white hover:border-[#003c33]/30 hover:bg-[#F8FAF9]'"
                     >
-                      <div class="flex items-center justify-between">
+                      <span
+                        class="absolute -top-3 left-1/2 -translate-x-1/2 px-2.5 py-0.5 rounded-full text-[11px] font-bold tracking-wide uppercase bg-[#003c33] text-[#9fe870] border border-[#9fe870]/30 shadow-sm whitespace-nowrap z-10"
+                      >
+                        Mẫu Excel
+                      </span>
+                      <div class="flex items-start justify-between">
                         <div
-                          class="w-11 h-11 rounded-2xl bg-[#003c33]/10 text-[#003c33] flex items-center justify-center font-bold"
+                          class="w-11 h-11 rounded-2xl bg-[#003c33]/10 text-[#003c33] flex items-center justify-center font-bold shrink-0"
                         >
                           <i data-lucide="layers" class="w-5 h-5"></i>
                         </div>
-                        <div class="flex items-center space-x-2">
-                          <span
-                            class="px-2.5 py-0.5 rounded-full text-xs font-bold bg-[#003c33] text-[#9fe870] shadow-sm"
-                            >Mẫu Excel</span
-                          >
-                          <div
-                            class="w-6 h-6 rounded-full border flex items-center justify-center transition-all"
-                            :class="reportingOption === '2024_2026' ? 'border-[#003c33] bg-[#003c33] text-[#9fe870]' : 'border-borderui bg-white'"
-                          >
-                            <i
-                              x-show="reportingOption === '2024_2026'"
-                              data-lucide="check"
-                              class="w-4 h-4"
-                            ></i>
-                          </div>
+                        <div
+                          class="w-6 h-6 rounded-full border flex items-center justify-center shrink-0 transition-all"
+                          :class="reportingOption === '2024_2026' ? 'border-[#003c33] bg-[#003c33] text-[#9fe870]' : 'border-borderui bg-white'"
+                        >
+                          <i
+                            x-show="reportingOption === '2024_2026'"
+                            data-lucide="check"
+                            class="w-4 h-4"
+                          ></i>
                         </div>
                       </div>
                       <div class="mt-5">

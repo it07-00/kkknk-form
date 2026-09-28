@@ -60,6 +60,8 @@
                               step="any"
                               min="0"
                               x-model.number="formData.inventory[yr].scope1_emissions"
+                              @input="clearFieldError('inventory.' + yr + '.scope1_emissions')"
+                              :aria-invalid="hasError('inventory.' + yr + '.scope1_emissions') ? 'true' : 'false'"
                               placeholder="Ví dụ: 2315.42"
                               class="w-full h-12 pl-4 pr-32 rounded-xl border border-borderui bg-white text-sm font-mono focus-ring transition-all"
                             />
@@ -68,6 +70,9 @@
                               >tấn CO₂e/năm</span
                             >
                           </div>
+                          <template x-if="hasError('inventory.' + yr + '.scope1_emissions')">
+                            <p class="text-xs text-danger mt-1.5" role="alert" x-text="getErrorMessage('inventory.' + yr + '.scope1_emissions')"></p>
+                          </template>
                         </div>
 
                         <!-- Phát thải Phạm vi 2 -->
@@ -88,6 +93,8 @@
                               step="any"
                               min="0"
                               x-model.number="formData.inventory[yr].scope2_emissions"
+                              @input="clearFieldError('inventory.' + yr + '.scope2_emissions')"
+                              :aria-invalid="hasError('inventory.' + yr + '.scope2_emissions') ? 'true' : 'false'"
                               placeholder="Ví dụ: 1047.27"
                               class="w-full h-12 pl-4 pr-32 rounded-xl border border-borderui bg-white text-sm font-mono focus-ring transition-all"
                             />
@@ -96,6 +103,9 @@
                               >tấn CO₂e/năm</span
                             >
                           </div>
+                          <template x-if="hasError('inventory.' + yr + '.scope2_emissions')">
+                            <p class="text-xs text-danger mt-1.5" role="alert" x-text="getErrorMessage('inventory.' + yr + '.scope2_emissions')"></p>
+                          </template>
                         </div>
                       </div>
 
@@ -109,11 +119,16 @@
 
                         <!-- Segmented Radio Buttons -->
                         <div
-                          class="grid grid-cols-1 sm:grid-cols-2 gap-4 max-w-lg"
+                          class="grid grid-cols-1 sm:grid-cols-3 gap-4"
+                          role="radiogroup"
+                          :aria-label="'Hình thức cung cấp báo cáo kiểm kê năm ' + yr"
                         >
                           <div
-                            @click="formData.inventory[yr].report_method = 'Chưa có báo cáo'"
+                            @click="formData.inventory[yr].report_method = 'Chưa có báo cáo'; clearFieldError('inventory.' + yr + '.report_method')"
+                            @keydown.enter.prevent="formData.inventory[yr].report_method = 'Chưa có báo cáo'; clearFieldError('inventory.' + yr + '.report_method')"
+                            @keydown.space.prevent="formData.inventory[yr].report_method = 'Chưa có báo cáo'; clearFieldError('inventory.' + yr + '.report_method')"
                             role="radio"
+                            tabindex="0"
                             :aria-checked="formData.inventory[yr].report_method === 'Chưa có báo cáo'"
                             class="p-4 rounded-2xl border-2 cursor-pointer transition-all flex items-center justify-between text-sm font-medium"
                             :class="formData.inventory[yr].report_method === 'Chưa có báo cáo' ? 'border-[#003c33] bg-[#003c33]/5 ring-1 ring-[#003c33] text-[#003c33] font-bold shadow-card' : 'border-borderui bg-white hover:border-[#003c33]/30 hover:bg-[#F8FAF9] text-txprimary'"
@@ -132,8 +147,11 @@
                           </div>
 
                           <div
-                            @click="formData.inventory[yr].report_method = 'Dán link báo cáo'"
+                            @click="formData.inventory[yr].report_method = 'Dán link báo cáo'; clearFieldError('inventory.' + yr + '.report_method')"
+                            @keydown.enter.prevent="formData.inventory[yr].report_method = 'Dán link báo cáo'; clearFieldError('inventory.' + yr + '.report_method')"
+                            @keydown.space.prevent="formData.inventory[yr].report_method = 'Dán link báo cáo'; clearFieldError('inventory.' + yr + '.report_method')"
                             role="radio"
+                            tabindex="0"
                             :aria-checked="formData.inventory[yr].report_method === 'Dán link báo cáo'"
                             class="p-4 rounded-2xl border-2 cursor-pointer transition-all flex items-center justify-between text-sm font-medium"
                             :class="formData.inventory[yr].report_method === 'Dán link báo cáo' ? 'border-[#003c33] bg-[#003c33]/5 ring-1 ring-[#003c33] text-[#003c33] font-bold shadow-card' : 'border-borderui bg-white hover:border-[#003c33]/30 hover:bg-[#F8FAF9] text-txprimary'"
@@ -150,7 +168,38 @@
                               ></i>
                             </div>
                           </div>
+
+                          <div
+                            @click="formData.inventory[yr].report_method = 'Kê khai trực tiếp theo hóa đơn'; clearFieldError('inventory.' + yr + '.report_method')"
+                            @keydown.enter.prevent="formData.inventory[yr].report_method = 'Kê khai trực tiếp theo hóa đơn'; clearFieldError('inventory.' + yr + '.report_method')"
+                            @keydown.space.prevent="formData.inventory[yr].report_method = 'Kê khai trực tiếp theo hóa đơn'; clearFieldError('inventory.' + yr + '.report_method')"
+                            role="radio"
+                            tabindex="0"
+                            :aria-checked="formData.inventory[yr].report_method === 'Kê khai trực tiếp theo hóa đơn'"
+                            class="p-4 rounded-2xl border-2 cursor-pointer transition-all flex items-center justify-between text-sm font-medium"
+                            :class="formData.inventory[yr].report_method === 'Kê khai trực tiếp theo hóa đơn' ? 'border-[#003c33] bg-[#003c33]/5 ring-1 ring-[#003c33] text-[#003c33] font-bold shadow-card' : 'border-borderui bg-white hover:border-[#003c33]/30 hover:bg-[#F8FAF9] text-txprimary'"
+                          >
+                            <span>Kê khai trực tiếp theo hóa đơn</span>
+                            <div
+                              class="w-5 h-5 rounded-full border flex items-center justify-center transition-all shrink-0 ml-3"
+                              :class="formData.inventory[yr].report_method === 'Kê khai trực tiếp theo hóa đơn' ? 'border-[#003c33] bg-[#003c33] text-[#9fe870]' : 'border-borderui bg-white'"
+                            >
+                              <i
+                                x-show="formData.inventory[yr].report_method === 'Kê khai trực tiếp theo hóa đơn'"
+                                data-lucide="check"
+                                class="w-3.5 h-3.5"
+                                aria-hidden="true"
+                              ></i>
+                            </div>
+                          </div>
                         </div>
+
+                        <template x-if="hasError('inventory.' + yr + '.report_method')">
+                          <p class="text-xs text-danger flex items-center space-x-1" role="alert">
+                            <i data-lucide="alert-circle" class="w-3.5 h-3.5" aria-hidden="true"></i>
+                            <span x-text="getErrorMessage('inventory.' + yr + '.report_method')"></span>
+                          </p>
+                        </template>
 
                         <!-- Conditional URL Field -->
                         <div

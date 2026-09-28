@@ -210,21 +210,10 @@
                             >Phạm vi 1 (Phát thải trực tiếp):</span
                           >
                           <div class="font-semibold text-txprimary mt-1">
-                            <template
-                              x-if="formData.inventory[yr].has_scope1 === false"
-                            >
-                              <span class="text-txsecondary"
-                                >Không phát sinh</span
-                              >
-                            </template>
-                            <template
-                              x-if="formData.inventory[yr].has_scope1 === true"
-                            >
-                              <span
-                                class="text-[#003c33] font-mono font-bold"
-                                x-text="formData.inventory[yr].scope1_sources.length + ' nguồn phát thải'"
-                              ></span>
-                            </template>
+                            <span
+                              class="text-[#003c33] font-mono font-bold"
+                              x-text="formData.inventory[yr].scope1_sources.length + ' nguồn phát thải'"
+                            ></span>
                           </div>
                           <template
                             x-if="formData.inventory[yr].scope1_emissions"
@@ -547,6 +536,16 @@
                             class="text-[#003c33] font-bold ml-1 hover:underline"
                             >Xem liên kết đính kèm ↗</a
                           >
+                        </div>
+                      </template>
+                      <template x-if="mitigationReportFile">
+                        <div class="sm:col-span-2 flex items-center gap-2 rounded-xl border border-[#003c33]/20 bg-[#F0F6F3] p-3">
+                          <i data-lucide="paperclip" class="h-4 w-4 shrink-0 text-[#003c33]" aria-hidden="true"></i>
+                          <div class="min-w-0">
+                            <span class="text-xs font-semibold text-txsecondary">File báo cáo sẽ gửi:</span>
+                            <span class="ml-1 break-all text-sm font-bold text-[#003c33]" x-text="mitigationReportFile.name"></span>
+                            <span class="ml-1 text-xs text-txsecondary" x-text="'(' + formatFileSize(mitigationReportFile.size) + ')' "></span>
+                          </div>
                         </div>
                       </template>
                     </div>

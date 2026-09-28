@@ -18,44 +18,11 @@
                   </h2>
                   <p class="text-sm text-txsecondary mt-1 leading-relaxed">
                     Biểu mẫu được sử dụng để thu thập thông tin và số liệu hoạt
-                    động phục vụ công tác kiểm kê khí nhà kính cấp cơ sở cho năm
-                    <strong>2024</strong> và <strong>2025</strong>, đồng thời
-                    ghi nhận kế hoạch giảm nhẹ phát thải khí nhà kính của doanh
-                    nghiệp theo quy định hiện hành.
+                    động phục vụ công tác kiểm kê khí nhà kính cấp cơ sở trong
+                    giai đoạn <strong>2024–2026</strong>, đồng thời ghi nhận kế
+                    hoạch giảm nhẹ phát thải khí nhà kính của doanh nghiệp theo
+                    quy định hiện hành.
                   </p>
-                </div>
-
-                <!-- Quick Demo Data Action Button (Matching Excel File) -->
-                <div
-                  class="flex flex-wrap items-center justify-between gap-3 p-3.5 rounded-2xl bg-[#003c33]/5 border border-[#003c33]/15"
-                >
-                  <div class="flex items-center space-x-2.5">
-                    <span
-                      class="w-8 h-8 rounded-xl bg-[#003c33] text-[#9fe870] flex items-center justify-center font-bold text-xs"
-                    >
-                      <i data-lucide="file-spreadsheet" class="w-4 h-4"></i>
-                    </span>
-                    <div>
-                      <span class="text-xs font-bold text-[#003c33]"
-                        >Dữ liệu mẫu từ Sở Công Thương:</span
-                      >
-                      <span class="text-xs text-txsecondary block"
-                        >Bộ số liệu thực tế Công ty TNHH Takigawa Việt Nam (theo
-                        file Excel)</span
-                      >
-                    </div>
-                  </div>
-                  <button
-                    type="button"
-                    @click="fillTakigawaSampleData()"
-                    class="inline-flex items-center px-4 py-2 rounded-xl text-xs font-bold text-[#003c33] bg-[#9fe870] hover:bg-[#8ee05b] shadow-sm transition-all cursor-pointer"
-                  >
-                    <i
-                      data-lucide="sparkles"
-                      class="w-3.5 h-3.5 mr-1.5 text-[#003c33]"
-                    ></i>
-                    <span>Nạp số liệu mẫu tự động</span>
-                  </button>
                 </div>
 
                 <!-- Dữ liệu cần chuẩn bị box -->
@@ -135,51 +102,3 @@
               </div>
             </div>
           </div>
-
-          <!-- FORM WRAPPER -->
-          <form
-            @submit.prevent="handleNext()"
-            id="ghgMainForm"
-            novalidate
-            class="space-y-6"
-          >
-            <!-- ERROR SUMMARY ALERT BOX (WCAG 3.3.1 & 3.3.3) -->
-            <div
-              x-show="Object.keys(errors).length > 0"
-              x-cloak
-              role="alert"
-              aria-live="assertive"
-              id="error-summary-banner"
-              class="bg-red-50 border border-red-200 rounded-2xl p-4 sm:p-5 shadow-subtle space-y-2.5 transition-all"
-            >
-              <div
-                class="flex items-center space-x-2 text-danger font-bold text-sm"
-              >
-                <i
-                  data-lucide="alert-octagon"
-                  class="w-5 h-5 flex-shrink-0 text-danger"
-                ></i>
-                <span
-                  >Vui lòng kiểm tra và hoàn thành các thông tin chưa hợp lệ bên
-                  dưới:</span
-                >
-              </div>
-              <ul
-                class="list-disc list-inside space-y-1 text-xs text-red-700 pl-1"
-              >
-                <template x-for="(msg, key) in errors" :key="key">
-                  <li>
-                    <button
-                      type="button"
-                      @click="focusFieldByKey(key)"
-                      class="hover:underline text-sm font-medium text-left transition-colors hover:text-red-900 cursor-pointer"
-                      x-text="msg"
-                    ></button>
-                  </li>
-                </template>
-              </ul>
-            </div>
-
-            <!-- ================================================================= -->
-            <!-- STEP 1: THÔNG TIN DOANH NGHIỆP                                    -->
-            <!-- ================================================================= -->

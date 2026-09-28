@@ -36,7 +36,7 @@
                         <span x-text="'Số liệu Năm ' + yr"></span>
                         <span
                           class="w-2.5 h-2.5 rounded-full"
-                          :class="formData.inventory[yr].has_scope1 === false || (formData.inventory[yr].has_scope1 === true && formData.inventory[yr].scope1_sources.length > 0) ? 'bg-[#9fe870]' : 'bg-amber-400'"
+                          :class="formData.inventory[yr].scope1_sources.length > 0 ? 'bg-[#9fe870]' : 'bg-amber-400'"
                         ></span>
                       </button>
                     </template>
@@ -48,120 +48,8 @@
                   class="space-y-6"
                   x-data="{ currentYear: activeScope1Year }"
                 >
-                  <!-- Question: Có phát sinh nguồn phát thải Scope 1 không? -->
-                  <div>
-                    <label
-                      class="block text-sm font-medium text-txprimary mb-3"
-                    >
-                      Trong năm
-                      <span
-                        class="text-[#003c33] font-mono font-bold"
-                        x-text="activeScope1Year"
-                      ></span
-                      >, doanh nghiệp có phát sinh nguồn phát thải thuộc Phạm vi
-                      1 không? <span class="text-danger">*</span>
-                    </label>
-
-                    <div class="grid grid-cols-1 sm:grid-cols-2 gap-4 max-w-lg">
-                      <!-- Option Có -->
-                      <div
-                        @click="setScope1Presence(activeScope1Year, true)"
-                        role="radio"
-                        :aria-checked="formData.inventory[activeScope1Year].has_scope1 === true"
-                        class="p-4 rounded-2xl border-2 cursor-pointer transition-all flex items-center justify-between"
-                        :class="formData.inventory[activeScope1Year].has_scope1 === true ? 'border-[#003c33] bg-[#003c33]/5 ring-1 ring-[#003c33] text-[#003c33] font-bold shadow-card' : 'border-borderui bg-white hover:border-[#003c33]/30 hover:bg-[#F8FAF9] text-txprimary'"
-                      >
-                        <div class="flex items-center space-x-3">
-                          <div
-                            class="w-8 h-8 rounded-xl bg-[#003c33]/10 text-[#003c33] flex items-center justify-center"
-                          >
-                            <i data-lucide="check-circle-2" class="w-4 h-4"></i>
-                          </div>
-                          <span class="text-sm"
-                            >Có phát sinh nguồn phát thải</span
-                          >
-                        </div>
-                        <div
-                          class="w-5 h-5 rounded-full border flex items-center justify-center transition-all"
-                          :class="formData.inventory[activeScope1Year].has_scope1 === true ? 'border-[#003c33] bg-[#003c33] text-[#9fe870]' : 'border-borderui bg-white'"
-                        >
-                          <i
-                            x-show="formData.inventory[activeScope1Year].has_scope1 === true"
-                            data-lucide="check"
-                            class="w-3.5 h-3.5"
-                          ></i>
-                        </div>
-                      </div>
-
-                      <!-- Option Không -->
-                      <div
-                        @click="setScope1Presence(activeScope1Year, false)"
-                        role="radio"
-                        :aria-checked="formData.inventory[activeScope1Year].has_scope1 === false"
-                        class="p-4 rounded-2xl border-2 cursor-pointer transition-all flex items-center justify-between"
-                        :class="formData.inventory[activeScope1Year].has_scope1 === false ? 'border-[#003c33] bg-[#003c33]/5 ring-1 ring-[#003c33] text-[#003c33] font-bold shadow-card' : 'border-borderui bg-white hover:border-[#003c33]/30 hover:bg-[#F8FAF9] text-txprimary'"
-                      >
-                        <div class="flex items-center space-x-3">
-                          <div
-                            class="w-8 h-8 rounded-xl bg-slate-100 text-txsecondary flex items-center justify-center"
-                          >
-                            <i data-lucide="x-circle" class="w-4 h-4"></i>
-                          </div>
-                          <span class="text-sm">Không có nguồn phát thải</span>
-                        </div>
-                        <div
-                          class="w-5 h-5 rounded-full border flex items-center justify-center transition-all"
-                          :class="formData.inventory[activeScope1Year].has_scope1 === false ? 'border-[#003c33] bg-[#003c33] text-[#9fe870]' : 'border-borderui bg-white'"
-                        >
-                          <i
-                            x-show="formData.inventory[activeScope1Year].has_scope1 === false"
-                            data-lucide="check"
-                            class="w-3.5 h-3.5"
-                          ></i>
-                        </div>
-                      </div>
-                    </div>
-
-                    <template
-                      x-if="hasError('inventory.' + activeScope1Year + '.has_scope1')"
-                    >
-                      <p
-                        class="text-xs text-danger mt-2 flex items-center space-x-1"
-                      >
-                        <i data-lucide="alert-circle" class="w-3.5 h-3.5"></i>
-                        <span
-                          x-text="getErrorMessage('inventory.' + activeScope1Year + '.has_scope1')"
-                        ></span>
-                      </p>
-                    </template>
-                  </div>
-
-                  <!-- SCOPE 1 = KHÔNG: Thông báo nhẹ -->
-                  <div
-                    x-show="formData.inventory[activeScope1Year].has_scope1 === false"
-                    class="p-4 rounded-2xl bg-[#F0F6F3] border border-[#003c33]/20 text-xs text-[#1e3b32] flex items-center space-x-2.5"
-                  >
-                    <div
-                      class="w-7 h-7 rounded-xl bg-[#003c33] text-[#9fe870] flex items-center justify-center flex-shrink-0"
-                    >
-                      <i data-lucide="check-check" class="w-4 h-4"></i>
-                    </div>
-                    <span
-                      >Đã ghi nhận: Năm
-                      <span
-                        class="font-bold font-mono"
-                        x-text="activeScope1Year"
-                      ></span>
-                      cơ sở không phát sinh phát thải Phạm vi 1. Quý vị có thể
-                      tiếp tục sang bước tiếp theo.</span
-                    >
-                  </div>
-
-                  <!-- SCOPE 1 = CÓ: DYNAMIC REPEATER CARD -->
-                  <div
-                    x-show="formData.inventory[activeScope1Year].has_scope1 === true"
-                    class="space-y-6 pt-2"
-                  >
+                  <!-- DYNAMIC SCOPE 1 REPEATER CARD -->
+                  <div class="space-y-6 pt-2">
                     <!-- 1. KHỐI LÒ HƠI / NỒI HƠI (Khớp cột K, L, M file Excel) -->
                     <div
                       class="bg-white rounded-2xl border border-borderui p-5 sm:p-6 shadow-subtle space-y-4"
@@ -226,6 +114,7 @@
                           <input
                             type="text"
                             x-model="formData.inventory[activeScope1Year].boiler.capacity"
+                            :aria-label="'Công suất thiết kế lò hơi năm ' + activeScope1Year"
                             placeholder="Ví dụ: 3 tấn hơi/giờ hoặc 3.5"
                             class="w-full h-11 px-3.5 rounded-xl border border-borderui bg-white text-sm focus-ring"
                           />
@@ -244,6 +133,7 @@
                           </label>
                           <select
                             x-model="formData.inventory[activeScope1Year].boiler.fuel"
+                            :aria-label="'Nhiên liệu đốt lò hơi năm ' + activeScope1Year"
                             class="w-full h-11 px-3.5 rounded-xl border border-borderui bg-white text-sm focus-ring"
                           >
                             <option value="Sinh khối">
@@ -262,6 +152,14 @@
                             </option>
                             <option value="Khác">Nhiên liệu khác</option>
                           </select>
+                          <input
+                            x-show="formData.inventory[activeScope1Year].boiler.fuel === 'Khác'"
+                            type="text"
+                            x-model="formData.inventory[activeScope1Year].boiler.fuel_other"
+                            :aria-label="'Nhiên liệu lò hơi khác năm ' + activeScope1Year"
+                            placeholder="Nhập nhiên liệu lò hơi khác..."
+                            class="w-full h-11 px-3.5 mt-2 rounded-xl border border-borderui bg-white text-sm focus-ring"
+                          />
                           <span class="text-xs text-txsecondary mt-1 block"
                             >Khớp cột: Nhiên liệu đốt lò hơi</span
                           >
@@ -281,11 +179,13 @@
                               step="any"
                               min="0"
                               x-model.number="formData.inventory[activeScope1Year].boiler.consumption"
+                              :aria-label="'Lượng đốt lò hơi trung bình năm ' + activeScope1Year"
                               placeholder="Ví dụ: 500"
                               class="w-full h-11 px-3.5 rounded-xl border border-borderui bg-white text-sm font-mono focus-ring"
                             />
                             <select
                               x-model="formData.inventory[activeScope1Year].boiler.unit"
+                              :aria-label="'Đơn vị lượng đốt lò hơi năm ' + activeScope1Year"
                               class="w-28 h-11 px-2.5 rounded-xl border border-borderui bg-white text-sm focus-ring"
                             >
                               <option value="tấn/năm">tấn/năm</option>
@@ -299,6 +199,14 @@
                           >
                         </div>
                       </div>
+                      <template
+                        x-if="hasErrorPrefix('inventory.' + activeScope1Year + '.boiler')"
+                      >
+                        <p class="text-xs text-danger flex items-center space-x-1" role="alert">
+                          <i data-lucide="alert-circle" class="w-3.5 h-3.5" aria-hidden="true"></i>
+                          <span x-text="getFirstErrorMessage('inventory.' + activeScope1Year + '.boiler')"></span>
+                        </p>
+                      </template>
                     </div>
 
                     <!-- 2. KHỐI MÔI CHẤT LẠNH & ĐIỀU HÒA (Khớp cột N, O, P, Q file Excel) -->
@@ -365,6 +273,7 @@
                           </label>
                           <select
                             x-model="formData.inventory[activeScope1Year].refrigeration.equipment"
+                            :aria-label="'Thiết bị lạnh sử dụng năm ' + activeScope1Year"
                             class="w-full h-11 px-3.5 rounded-xl border border-borderui bg-white text-sm focus-ring"
                           >
                             <option value="Máy lạnh">
@@ -381,6 +290,14 @@
                             </option>
                             <option value="Khác">Thiết bị lạnh khác</option>
                           </select>
+                          <input
+                            x-show="formData.inventory[activeScope1Year].refrigeration.equipment === 'Khác'"
+                            type="text"
+                            x-model="formData.inventory[activeScope1Year].refrigeration.equipment_other"
+                            :aria-label="'Thiết bị lạnh khác năm ' + activeScope1Year"
+                            placeholder="Nhập thiết bị lạnh khác..."
+                            class="w-full h-11 px-3.5 mt-2 rounded-xl border border-borderui bg-white text-sm focus-ring"
+                          />
                           <span class="text-xs text-txsecondary mt-1 block"
                             >Khớp cột: Thiết bị lạnh sử dụng</span
                           >
@@ -396,6 +313,7 @@
                           <input
                             type="text"
                             x-model="formData.inventory[activeScope1Year].refrigeration.capacity"
+                            :aria-label="'Công suất lạnh năm ' + activeScope1Year"
                             placeholder="Ví dụ: 2 HP, 50 HP, 60.000 BTU/h"
                             class="w-full h-11 px-3.5 rounded-xl border border-borderui bg-white text-sm focus-ring"
                           />
@@ -414,6 +332,7 @@
                           </label>
                           <select
                             x-model="formData.inventory[activeScope1Year].refrigeration.gas_type"
+                            :aria-label="'Loại môi chất lạnh năm ' + activeScope1Year"
                             class="w-full h-11 px-3.5 rounded-xl border border-borderui bg-white text-sm focus-ring"
                           >
                             <option value="R22">R22</option>
@@ -425,6 +344,14 @@
                             <option value="R507A">R507A</option>
                             <option value="Khác">Gas lạnh khác</option>
                           </select>
+                          <input
+                            x-show="formData.inventory[activeScope1Year].refrigeration.gas_type === 'Khác'"
+                            type="text"
+                            x-model="formData.inventory[activeScope1Year].refrigeration.gas_type_other"
+                            :aria-label="'Môi chất lạnh khác năm ' + activeScope1Year"
+                            placeholder="Nhập loại môi chất lạnh khác..."
+                            class="w-full h-11 px-3.5 mt-2 rounded-xl border border-borderui bg-white text-sm focus-ring"
+                          />
                           <span class="text-xs text-txsecondary mt-1 block"
                             >Khớp cột: Loại môi chất lạnh</span
                           >
@@ -443,6 +370,7 @@
                             step="any"
                             min="0"
                             x-model.number="formData.inventory[activeScope1Year].refrigeration.full_charge_kg"
+                            :aria-label="'Lượng gas nạp đầy năm ' + activeScope1Year"
                             placeholder="Ví dụ: 10 (kg)"
                             class="w-full h-11 px-3.5 rounded-xl border border-borderui bg-white text-sm font-mono focus-ring"
                           />
@@ -451,6 +379,14 @@
                           >
                         </div>
                       </div>
+                      <template
+                        x-if="hasErrorPrefix('inventory.' + activeScope1Year + '.refrigeration')"
+                      >
+                        <p class="text-xs text-danger flex items-center space-x-1" role="alert">
+                          <i data-lucide="alert-circle" class="w-3.5 h-3.5" aria-hidden="true"></i>
+                          <span x-text="getFirstErrorMessage('inventory.' + activeScope1Year + '.refrigeration')"></span>
+                        </p>
+                      </template>
                     </div>
 
                     <!-- 3. CÁC NGUỒN PHÁT THẢI TRỰC TIẾP KHÁC -->
@@ -486,6 +422,7 @@
                       <!-- Add Source Button Top -->
                       <button
                         type="button"
+                        :id="'scope1_sources_' + activeScope1Year"
                         @click="addScope1Source(activeScope1Year)"
                         class="inline-flex items-center px-3.5 py-2 rounded-xl text-sm font-semibold text-[#003c33] bg-[#9fe870]/30 hover:bg-[#9fe870]/50 transition-all shadow-sm cursor-pointer"
                       >
@@ -496,6 +433,15 @@
                         <span>Thêm nguồn phát thải</span>
                       </button>
                     </div>
+
+                    <template
+                      x-if="hasErrorPrefix('inventory.' + activeScope1Year + '.scope1_sources')"
+                    >
+                      <p class="text-xs text-danger flex items-center space-x-1" role="alert">
+                        <i data-lucide="alert-circle" class="w-3.5 h-3.5" aria-hidden="true"></i>
+                        <span x-text="getFirstErrorMessage('inventory.' + activeScope1Year + '.scope1_sources')"></span>
+                      </p>
+                    </template>
 
                     <!-- Empty state if 0 sources -->
                     <div
@@ -586,6 +532,7 @@
                               </label>
                               <select
                                 x-model="source.source_type"
+                                :aria-label="'Loại nguồn phát thải số ' + (sIdx + 1) + ' năm ' + activeScope1Year"
                                 class="w-full h-11 px-3.5 rounded-xl border border-borderui bg-white text-sm focus-ring"
                               >
                                 <option value="" disabled selected>
@@ -622,6 +569,7 @@
                                 <input
                                   type="text"
                                   x-model="source.source_type_other"
+                                  :aria-label="'Loại nguồn phát thải khác số ' + (sIdx + 1) + ' năm ' + activeScope1Year"
                                   placeholder="Nhập tên nguồn phát thải khác..."
                                   class="w-full h-11 px-3.5 mt-2 rounded-xl border border-borderui bg-white text-sm focus-ring"
                                 />
@@ -638,6 +586,7 @@
                               </label>
                               <select
                                 x-model="source.fuel_type"
+                                :aria-label="'Nhiên liệu hoặc chất sử dụng nguồn số ' + (sIdx + 1) + ' năm ' + activeScope1Year"
                                 class="w-full h-11 px-3.5 rounded-xl border border-borderui bg-white text-sm focus-ring"
                               >
                                 <option value="" disabled selected>
@@ -678,6 +627,7 @@
                                 <input
                                   type="text"
                                   x-model="source.fuel_type_other"
+                                  :aria-label="'Nhiên liệu hoặc chất khác nguồn số ' + (sIdx + 1) + ' năm ' + activeScope1Year"
                                   placeholder="Nhập tên nhiên liệu / chất khác..."
                                   class="w-full h-11 px-3.5 mt-2 rounded-xl border border-borderui bg-white text-sm focus-ring"
                                 />
@@ -698,6 +648,7 @@
                                   step="any"
                                   min="0"
                                   x-model.number="source.quantity"
+                                  :aria-label="'Lượng sử dụng nguồn số ' + (sIdx + 1) + ' năm ' + activeScope1Year"
                                   placeholder="Ví dụ: 12500 hoặc 45.8"
                                   class="w-full h-11 px-3.5 rounded-xl border border-borderui bg-white text-sm font-mono focus-ring"
                                 />
@@ -739,6 +690,7 @@
                               >
                                 <select
                                   x-model="source.unit"
+                                  :aria-label="'Đơn vị nguồn số ' + (sIdx + 1) + ' năm ' + activeScope1Year"
                                   class="w-full h-11 px-3.5 rounded-xl border border-borderui bg-white text-sm focus-ring"
                                 >
                                   <option value="" disabled selected>
@@ -758,6 +710,7 @@
                                   <input
                                     type="text"
                                     x-model="source.unit_other"
+                                    :aria-label="'Đơn vị khác nguồn số ' + (sIdx + 1) + ' năm ' + activeScope1Year"
                                     placeholder="Đơn vị khác..."
                                     class="w-full h-11 px-3.5 rounded-xl border border-borderui bg-white text-sm focus-ring"
                                   />
@@ -778,6 +731,7 @@
                               <textarea
                                 rows="2"
                                 x-model="source.note"
+                                :aria-label="'Ghi chú nguồn số ' + (sIdx + 1) + ' năm ' + activeScope1Year"
                                 placeholder="Thông tin bổ sung về nguồn phát thải, thiết bị sử dụng (nồi hơi công suất bao nhiêu), cách xác định số liệu (hóa đơn mua, đo đếm trực tiếp)..."
                                 class="w-full p-3.5 rounded-xl border border-borderui bg-white text-sm focus-ring"
                               ></textarea>

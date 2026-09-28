@@ -5,6 +5,7 @@
       aria-labelledby="modal-title"
       role="dialog"
       aria-modal="true"
+      @keydown.escape.window="showDeleteModal = false"
     >
       <div
         class="fixed inset-0 bg-[#091710]/50 backdrop-blur-sm transition-opacity"
@@ -42,6 +43,7 @@
             class="flex items-center justify-end space-x-3 pt-4 border-t border-borderui"
           >
             <button
+              x-ref="deleteCancelButton"
               type="button"
               @click="showDeleteModal = false"
               class="px-4 py-2.5 rounded-xl border border-borderui text-sm font-medium text-txsecondary hover:text-txprimary hover:bg-[#F0F4F2] transition-colors"
