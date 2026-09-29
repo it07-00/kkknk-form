@@ -91,6 +91,8 @@ class GhgSubmissionExcelExporter
             }
 
             $inventory = Arr::get($data, "inventory.{$year}", []);
+            $boilers = $this->equipmentList($inventory, 'boilers', 'boiler');
+            $refrigerationSystems = $this->equipmentList($inventory, 'refrigeration_systems', 'refrigeration');
             $scope1Emissions = $this->numericValue(Arr::get($inventory, 'scope1_emissions'));
             $scope2Emissions = $this->numericValue(Arr::get($inventory, 'scope2_emissions'));
 
@@ -105,13 +107,13 @@ class GhgSubmissionExcelExporter
                 "H{$row}" => $this->fuelSummary($inventory),
                 "I{$row}" => $this->numericValue(Arr::get($inventory, 'grid_electricity_kwh')),
                 "J{$row}" => $this->numericValue(Arr::get($inventory, 'solar_electricity_kwh')),
-                "K{$row}" => Arr::get($inventory, 'has_boiler') ? Arr::get($inventory, 'boiler.capacity') : null,
-                "L{$row}" => Arr::get($inventory, 'has_boiler') ? $this->choiceLabel(Arr::get($inventory, 'boiler', []), 'fuel') : null,
-                "M{$row}" => Arr::get($inventory, 'has_boiler') ? $this->measurement(Arr::get($inventory, 'boiler.consumption'), Arr::get($inventory, 'boiler.unit')) : null,
-                "N{$row}" => Arr::get($inventory, 'has_cooling') ? $this->choiceLabel(Arr::get($inventory, 'refrigeration', []), 'equipment') : null,
-                "O{$row}" => Arr::get($inventory, 'has_cooling') ? Arr::get($inventory, 'refrigeration.capacity') : null,
-                "P{$row}" => Arr::get($inventory, 'has_cooling') ? $this->choiceLabel(Arr::get($inventory, 'refrigeration', []), 'gas_type') : null,
-                "Q{$row}" => Arr::get($inventory, 'has_cooling') ? $this->numericValue(Arr::get($inventory, 'refrigeration.full_charge_kg')) : null,
+                "K{$row}" => $this->equipmentValues($boilers, fn (array $boiler): mixed => Arr::get($boiler, 'capacity')),
+                "L{$row}" => $this->equipmentValues($boilers, fn (array $boiler): ?string => $this->choiceLabel($boiler, 'fuel')),
+                "M{$row}" => $this->equipmentValues($boilers, fn (array $boiler): ?string => $this->measurement(Arr::get($boiler, 'consumption'), Arr::get($boiler, 'unit'))),
+                "N{$row}" => $this->equipmentValues($refrigerationSystems, fn (array $system): ?string => $this->choiceLabel($system, 'equipment')),
+                "O{$row}" => $this->equipmentValues($refrigerationSystems, fn (array $system): mixed => Arr::get($system, 'capacity')),
+                "P{$row}" => $this->equipmentValues($refrigerationSystems, fn (array $system): ?string => $this->choiceLabel($system, 'gas_type')),
+                "Q{$row}" => $this->equipmentValues($refrigerationSystems, fn (array $system): ?float => $this->numericValue(Arr::get($system, 'full_charge_kg'))),
                 "R{$row}" => $this->numericValue(Arr::get($inventory, 'energy_toe')),
                 "S{$row}" => $this->scope1Summary($inventory),
                 "T{$row}" => $this->scope2Summary($inventory),
@@ -241,7 +243,9 @@ class GhgSubmissionExcelExporter
         $fuels = [];
 
         if (Arr::get($inventory, 'has_boiler')) {
-            $fuels[] = $this->choiceLabel(Arr::get($inventory, 'boiler', []), 'fuel');
+            foreach ($this->equipmentList($inventory, 'boilers', 'boiler') as $boiler) {
+                $fuels[] = $this->choiceLabel($boiler, 'fuel');
+            }
         }
 
         foreach (Arr::get($inventory, 'scope1_sources', []) as $source) {
@@ -285,6 +289,52 @@ class GhgSubmissionExcelExporter
         $sources = array_values(array_unique($sources));
 
         return $sources === [] ? null : implode('; ', $sources);
+    }
+
+    /**
+     * @param  array<string, mixed>  $inventory
+     * @return array<int, array<string, mixed>>
+     */
+    private function equipmentList(array $inventory, string $listKey, string $legacyKey): array
+    {
+        $equipment = Arr::get($inventory, $listKey);
+
+        if (is_array($equipment) && array_is_list($equipment)) {
+            return array_values(array_filter($equipment, is_array(...)));
+        }
+
+        $legacyEquipment = Arr::get($inventory, $legacyKey);
+
+        return is_array($legacyEquipment) ? [$legacyEquipment] : [];
+    }
+
+    /**
+     * @param  array<int, array<string, mixed>>  $equipment
+     * @param  callable(array<string, mixed>): mixed  $value
+     */
+    private function equipmentValues(array $equipment, callable $value): int|float|string|null
+    {
+        $values = array_values(array_filter(
+            array_map($value, $equipment),
+            fn (mixed $item): bool => $item !== null && $item !== ''
+        ));
+
+        if ($values === []) {
+            return null;
+        }
+
+        if (count($values) === 1) {
+            $singleValue = $values[0];
+
+            return is_int($singleValue) || is_float($singleValue) || is_string($singleValue)
+                ? $singleValue
+                : (string) $singleValue;
+        }
+
+        return implode('; ', array_map(
+            fn (mixed $item): string => (string) $item,
+            $values
+        ));
     }
 
     /**

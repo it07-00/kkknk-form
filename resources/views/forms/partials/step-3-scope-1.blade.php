@@ -50,14 +50,14 @@
                 >
                   <!-- DYNAMIC SCOPE 1 REPEATER CARD -->
                   <div class="space-y-6 pt-2">
-                    <!-- 1. KHỐI LÒ HƠI / NỒI HƠI (Khớp cột K, L, M file Excel) -->
+                    <!-- 1. KHỐI LÒ HƠI / NỒI HƠI -->
                     <div
                       class="bg-white rounded-2xl border border-borderui p-5 sm:p-6 shadow-subtle space-y-4"
                     >
                       <div
-                        class="flex items-center justify-between pb-3.5 border-b border-borderui"
+                        class="flex flex-col gap-3 border-b border-borderui pb-3.5 sm:flex-row sm:items-center sm:justify-between"
                       >
-                        <div class="flex items-center space-x-3">
+                        <div class="flex min-w-0 items-center gap-3">
                           <div
                             class="w-9 h-9 rounded-xl bg-amber-50 text-amber-800 flex items-center justify-center font-bold"
                           >
@@ -79,18 +79,27 @@
 
                         <!-- Toggle Switch -->
                         <label
-                          class="relative inline-flex items-center cursor-pointer"
+                          class="inline-flex shrink-0 cursor-pointer items-center gap-2.5"
                         >
                           <input
                             type="checkbox"
                             x-model="formData.inventory[activeScope1Year].has_boiler"
+                            @change="toggleBoilers(activeScope1Year, $event.target.checked)"
+                            :aria-label="'Khai báo lò hơi năm ' + activeScope1Year"
                             class="sr-only peer"
                           />
-                          <div
-                            class="w-11 h-6 bg-slate-200 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-slate-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-[#003c33]"
-                          ></div>
                           <span
-                            class="ml-2.5 text-xs font-semibold"
+                            class="relative inline-flex h-6 w-11 shrink-0 rounded-full transition-colors peer-focus-visible:ring-2 peer-focus-visible:ring-[#003c33] peer-focus-visible:ring-offset-2"
+                            :class="formData.inventory[activeScope1Year].has_boiler ? 'bg-[#003c33]' : 'bg-slate-200'"
+                            aria-hidden="true"
+                          >
+                            <span
+                              class="absolute left-0.5 top-1/2 h-5 w-5 -translate-y-1/2 rounded-full border border-slate-300 bg-white shadow-sm transition-transform"
+                              :class="formData.inventory[activeScope1Year].has_boiler ? 'translate-x-5' : 'translate-x-0'"
+                            ></span>
+                          </span>
+                          <span
+                            class="text-xs font-semibold"
                             :class="formData.inventory[activeScope1Year].has_boiler ? 'text-[#003c33] font-bold' : 'text-txsecondary'"
                             x-text="formData.inventory[activeScope1Year].has_boiler ? 'Có sử dụng lò hơi' : 'Không có lò hơi'"
                           ></span>
@@ -101,122 +110,133 @@
                       <div
                         x-show="formData.inventory[activeScope1Year].has_boiler"
                         x-transition
-                        class="grid grid-cols-1 sm:grid-cols-3 gap-4 pt-1"
+                        class="space-y-4 pt-1"
                       >
-                        <!-- Công suất lò hơi -->
-                        <div>
-                          <label
-                            class="block text-sm font-medium text-txprimary mb-1.5"
-                          >
-                            Công suất thiết kế lò hơi
-                            <span class="text-danger">*</span>
-                          </label>
-                          <input
-                            type="text"
-                            x-model="formData.inventory[activeScope1Year].boiler.capacity"
-                            :aria-label="'Công suất thiết kế lò hơi năm ' + activeScope1Year"
-                            placeholder="Ví dụ: 3 tấn hơi/giờ hoặc 3.5"
-                            class="w-full h-11 px-3.5 rounded-xl border border-borderui bg-white text-sm focus-ring"
-                          />
-                          <span class="text-xs text-txsecondary mt-1 block"
-                            >Khớp cột: Công suất (tấn hơi/giờ)</span
-                          >
-                        </div>
+                        <template
+                          x-for="(boiler, boilerIndex) in formData.inventory[activeScope1Year].boilers"
+                          :key="boiler.id"
+                        >
+                          <div class="space-y-4 rounded-2xl border border-borderui bg-[#F8FAF9] p-4">
+                            <div class="flex items-center justify-between gap-3">
+                              <h5 class="text-sm font-bold text-[#003c33]" x-text="'Lò hơi #' + (boilerIndex + 1)"></h5>
+                              <button
+                                type="button"
+                                @click="removeBoiler(activeScope1Year, boilerIndex)"
+                                class="inline-flex min-h-10 items-center gap-1.5 rounded-xl px-3 text-xs font-semibold text-danger transition-colors hover:bg-red-50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-danger"
+                                :aria-label="'Xóa lò hơi số ' + (boilerIndex + 1)"
+                              >
+                                <i data-lucide="trash-2" class="h-4 w-4" aria-hidden="true"></i>
+                                <span>Xóa</span>
+                              </button>
+                            </div>
 
-                        <!-- Nhiên liệu đốt lò hơi -->
-                        <div>
-                          <label
-                            class="block text-sm font-medium text-txprimary mb-1.5"
-                          >
-                            Nhiên liệu đốt lò hơi
-                            <span class="text-danger">*</span>
-                          </label>
-                          <select
-                            x-model="formData.inventory[activeScope1Year].boiler.fuel"
-                            :aria-label="'Nhiên liệu đốt lò hơi năm ' + activeScope1Year"
-                            class="w-full h-11 px-3.5 rounded-xl border border-borderui bg-white text-sm focus-ring"
-                          >
-                            <option value="Sinh khối">
-                              Sinh khối (Biomass, trấu, mùn cưa, dăm gỗ...)
-                            </option>
-                            <option value="Than đá">Than đá / Than cám</option>
-                            <option value="Dầu DO">Dầu DO (Diesel)</option>
-                            <option value="Dầu FO">Dầu FO (Fuel Oil)</option>
-                            <option value="LPG">LPG (Khí hóa lỏng)</option>
-                            <option value="Khí tự nhiên">
-                              Khí tự nhiên (CNG, LNG)
-                            </option>
-                            <option value="Củi gỗ">Củi gỗ</option>
-                            <option value="Viên nén">
-                              Viên nén mùn cưa (Pellets)
-                            </option>
-                            <option value="Khác">Nhiên liệu khác</option>
-                          </select>
-                          <input
-                            x-show="formData.inventory[activeScope1Year].boiler.fuel === 'Khác'"
-                            type="text"
-                            x-model="formData.inventory[activeScope1Year].boiler.fuel_other"
-                            :aria-label="'Nhiên liệu lò hơi khác năm ' + activeScope1Year"
-                            placeholder="Nhập nhiên liệu lò hơi khác..."
-                            class="w-full h-11 px-3.5 mt-2 rounded-xl border border-borderui bg-white text-sm focus-ring"
-                          />
-                          <span class="text-xs text-txsecondary mt-1 block"
-                            >Khớp cột: Nhiên liệu đốt lò hơi</span
-                          >
-                        </div>
+                            <div class="grid grid-cols-1 gap-4 sm:grid-cols-3">
+                              <div>
+                                <label class="mb-1.5 block text-sm font-medium text-txprimary">
+                                  Công suất thiết kế <span class="text-danger">*</span>
+                                </label>
+                                <input
+                                  type="text"
+                                  x-model="boiler.capacity"
+                                  :aria-label="'Công suất thiết kế lò hơi ' + (boilerIndex + 1) + ' năm ' + activeScope1Year"
+                                  placeholder="Ví dụ: 3 tấn hơi/giờ"
+                                  class="h-11 w-full rounded-xl border border-borderui bg-white px-3.5 text-sm focus-ring"
+                                />
+                              </div>
 
-                        <!-- Lượng đốt trung bình/năm -->
-                        <div>
-                          <label
-                            class="block text-sm font-medium text-txprimary mb-1.5"
-                          >
-                            Lượng đốt trung bình/năm
-                            <span class="text-danger">*</span>
-                          </label>
-                          <div class="flex space-x-2">
-                            <input
-                              type="number"
-                              step="any"
-                              min="0"
-                              x-model.number="formData.inventory[activeScope1Year].boiler.consumption"
-                              :aria-label="'Lượng đốt lò hơi trung bình năm ' + activeScope1Year"
-                              placeholder="Ví dụ: 500"
-                              class="w-full h-11 px-3.5 rounded-xl border border-borderui bg-white text-sm font-mono focus-ring"
-                            />
-                            <select
-                              x-model="formData.inventory[activeScope1Year].boiler.unit"
-                              :aria-label="'Đơn vị lượng đốt lò hơi năm ' + activeScope1Year"
-                              class="w-28 h-11 px-2.5 rounded-xl border border-borderui bg-white text-sm focus-ring"
-                            >
-                              <option value="tấn/năm">tấn/năm</option>
-                              <option value="kg/năm">kg/năm</option>
-                              <option value="m³/năm">m³/năm</option>
-                              <option value="lít/năm">lít/năm</option>
-                            </select>
+                              <div>
+                                <label class="mb-1.5 block text-sm font-medium text-txprimary">
+                                  Nhiên liệu đốt <span class="text-danger">*</span>
+                                </label>
+                                <select
+                                  x-model="boiler.fuel"
+                                  :aria-label="'Nhiên liệu lò hơi ' + (boilerIndex + 1) + ' năm ' + activeScope1Year"
+                                  class="h-11 w-full rounded-xl border border-borderui bg-white px-3.5 text-sm focus-ring"
+                                >
+                                  <option value="Sinh khối">Sinh khối (Biomass, trấu, mùn cưa, dăm gỗ...)</option>
+                                  <option value="Than đá">Than đá / Than cám</option>
+                                  <option value="Dầu DO">Dầu DO (Diesel)</option>
+                                  <option value="Dầu FO">Dầu FO (Fuel Oil)</option>
+                                  <option value="LPG">LPG (Khí hóa lỏng)</option>
+                                  <option value="Khí tự nhiên">Khí tự nhiên (CNG, LNG)</option>
+                                  <option value="Củi gỗ">Củi gỗ</option>
+                                  <option value="Viên nén">Viên nén mùn cưa (Pellets)</option>
+                                  <option value="Khác">Nhiên liệu khác</option>
+                                </select>
+                                <input
+                                  x-show="boiler.fuel === 'Khác'"
+                                  type="text"
+                                  x-model="boiler.fuel_other"
+                                  :aria-label="'Nhiên liệu khác của lò hơi ' + (boilerIndex + 1)"
+                                  placeholder="Nhập nhiên liệu khác..."
+                                  class="mt-2 h-11 w-full rounded-xl border border-borderui bg-white px-3.5 text-sm focus-ring"
+                                />
+                              </div>
+
+                              <div>
+                                <label class="mb-1.5 block text-sm font-medium text-txprimary">
+                                  Lượng đốt trung bình/năm <span class="text-danger">*</span>
+                                </label>
+                                <div class="flex gap-2">
+                                  <input
+                                    type="number"
+                                    step="any"
+                                    min="0"
+                                    x-model.number="boiler.consumption"
+                                    :aria-label="'Lượng đốt lò hơi ' + (boilerIndex + 1)"
+                                    placeholder="Ví dụ: 500"
+                                    class="h-11 min-w-0 flex-1 rounded-xl border border-borderui bg-white px-3.5 text-sm font-mono focus-ring"
+                                  />
+                                  <select
+                                    x-model="boiler.unit"
+                                    :aria-label="'Đơn vị lượng đốt lò hơi ' + (boilerIndex + 1)"
+                                    class="h-11 w-28 rounded-xl border border-borderui bg-white px-2.5 text-sm focus-ring"
+                                  >
+                                    <option value="tấn/năm">tấn/năm</option>
+                                    <option value="kg/năm">kg/năm</option>
+                                    <option value="m³/năm">m³/năm</option>
+                                    <option value="lít/năm">lít/năm</option>
+                                  </select>
+                                </div>
+                              </div>
+                            </div>
+
+                            <template x-if="hasErrorPrefix('inventory.' + activeScope1Year + '.boilers.' + boilerIndex)">
+                              <p class="flex items-center gap-1 text-xs text-danger" role="alert">
+                                <i data-lucide="alert-circle" class="h-3.5 w-3.5" aria-hidden="true"></i>
+                                <span x-text="getFirstErrorMessage('inventory.' + activeScope1Year + '.boilers.' + boilerIndex)"></span>
+                              </p>
+                            </template>
                           </div>
-                          <span class="text-xs text-txsecondary mt-1 block"
-                            >Khớp cột: Lượng đốt trung bình/năm</span
-                          >
-                        </div>
+                        </template>
+
+                        <button
+                          type="button"
+                          @click="addBoiler(activeScope1Year)"
+                          class="inline-flex min-h-11 items-center gap-2 rounded-xl border border-dashed border-[#003c33]/40 bg-white px-4 text-sm font-bold text-[#003c33] transition-colors hover:border-[#003c33] hover:bg-[#F0F6F3] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#003c33]"
+                        >
+                          <i data-lucide="plus" class="h-4 w-4" aria-hidden="true"></i>
+                          <span>Thêm lò hơi</span>
+                        </button>
                       </div>
                       <template
-                        x-if="hasErrorPrefix('inventory.' + activeScope1Year + '.boiler')"
+                        x-if="hasError('inventory.' + activeScope1Year + '.boilers')"
                       >
-                        <p class="text-xs text-danger flex items-center space-x-1" role="alert">
+                        <p class="flex items-center gap-1 text-xs text-danger" role="alert">
                           <i data-lucide="alert-circle" class="w-3.5 h-3.5" aria-hidden="true"></i>
-                          <span x-text="getFirstErrorMessage('inventory.' + activeScope1Year + '.boiler')"></span>
+                          <span x-text="getErrorMessage('inventory.' + activeScope1Year + '.boilers')"></span>
                         </p>
                       </template>
                     </div>
 
-                    <!-- 2. KHỐI MÔI CHẤT LẠNH & ĐIỀU HÒA (Khớp cột N, O, P, Q file Excel) -->
+                    <!-- 2. KHỐI MÔI CHẤT LẠNH & ĐIỀU HÒA -->
                     <div
                       class="bg-white rounded-2xl border border-borderui p-5 sm:p-6 shadow-subtle space-y-4"
                     >
                       <div
-                        class="flex items-center justify-between pb-3.5 border-b border-borderui"
+                        class="flex flex-col gap-3 border-b border-borderui pb-3.5 sm:flex-row sm:items-center sm:justify-between"
                       >
-                        <div class="flex items-center space-x-3">
+                        <div class="flex min-w-0 items-center gap-3">
                           <div
                             class="w-9 h-9 rounded-xl bg-sky-50 text-sky-800 flex items-center justify-center font-bold"
                           >
@@ -239,18 +259,27 @@
 
                         <!-- Toggle Switch -->
                         <label
-                          class="relative inline-flex items-center cursor-pointer"
+                          class="inline-flex shrink-0 cursor-pointer items-center gap-2.5"
                         >
                           <input
                             type="checkbox"
                             x-model="formData.inventory[activeScope1Year].has_cooling"
+                            @change="toggleRefrigerationSystems(activeScope1Year, $event.target.checked)"
+                            :aria-label="'Khai báo hệ thống lạnh năm ' + activeScope1Year"
                             class="sr-only peer"
                           />
-                          <div
-                            class="w-11 h-6 bg-slate-200 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-slate-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-[#003c33]"
-                          ></div>
                           <span
-                            class="ml-2.5 text-xs font-semibold"
+                            class="relative inline-flex h-6 w-11 shrink-0 rounded-full transition-colors peer-focus-visible:ring-2 peer-focus-visible:ring-[#003c33] peer-focus-visible:ring-offset-2"
+                            :class="formData.inventory[activeScope1Year].has_cooling ? 'bg-[#003c33]' : 'bg-slate-200'"
+                            aria-hidden="true"
+                          >
+                            <span
+                              class="absolute left-0.5 top-1/2 h-5 w-5 -translate-y-1/2 rounded-full border border-slate-300 bg-white shadow-sm transition-transform"
+                              :class="formData.inventory[activeScope1Year].has_cooling ? 'translate-x-5' : 'translate-x-0'"
+                            ></span>
+                          </span>
+                          <span
+                            class="text-xs font-semibold"
                             :class="formData.inventory[activeScope1Year].has_cooling ? 'text-[#003c33] font-bold' : 'text-txsecondary'"
                             x-text="formData.inventory[activeScope1Year].has_cooling ? 'Có sử dụng hệ thống lạnh' : 'Không có hệ thống lạnh'"
                           ></span>
@@ -261,130 +290,133 @@
                       <div
                         x-show="formData.inventory[activeScope1Year].has_cooling"
                         x-transition
-                        class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 pt-1"
+                        class="space-y-4 pt-1"
                       >
-                        <!-- Thiết bị lạnh sử dụng -->
-                        <div>
-                          <label
-                            class="block text-sm font-medium text-txprimary mb-1.5"
-                          >
-                            Thiết bị lạnh sử dụng
-                            <span class="text-danger">*</span>
-                          </label>
-                          <select
-                            x-model="formData.inventory[activeScope1Year].refrigeration.equipment"
-                            :aria-label="'Thiết bị lạnh sử dụng năm ' + activeScope1Year"
-                            class="w-full h-11 px-3.5 rounded-xl border border-borderui bg-white text-sm focus-ring"
-                          >
-                            <option value="Máy lạnh">
-                              Máy lạnh dân dụng / cục bộ
-                            </option>
-                            <option value="Chiller">
-                              Hệ thống Chiller làm lạnh nước
-                            </option>
-                            <option value="VRV/VRF">
-                              Điều hòa trung tâm VRV / VRF
-                            </option>
-                            <option value="Kho lạnh">
-                              Kho lạnh công nghiệp / Tủ đông
-                            </option>
-                            <option value="Khác">Thiết bị lạnh khác</option>
-                          </select>
-                          <input
-                            x-show="formData.inventory[activeScope1Year].refrigeration.equipment === 'Khác'"
-                            type="text"
-                            x-model="formData.inventory[activeScope1Year].refrigeration.equipment_other"
-                            :aria-label="'Thiết bị lạnh khác năm ' + activeScope1Year"
-                            placeholder="Nhập thiết bị lạnh khác..."
-                            class="w-full h-11 px-3.5 mt-2 rounded-xl border border-borderui bg-white text-sm focus-ring"
-                          />
-                          <span class="text-xs text-txsecondary mt-1 block"
-                            >Khớp cột: Thiết bị lạnh sử dụng</span
-                          >
-                        </div>
+                        <template
+                          x-for="(system, systemIndex) in formData.inventory[activeScope1Year].refrigeration_systems"
+                          :key="system.id"
+                        >
+                          <div class="space-y-4 rounded-2xl border border-borderui bg-[#F8FAF9] p-4">
+                            <div class="flex items-center justify-between gap-3">
+                              <h5 class="text-sm font-bold text-[#003c33]" x-text="'Hệ thống lạnh #' + (systemIndex + 1)"></h5>
+                              <button
+                                type="button"
+                                @click="removeRefrigerationSystem(activeScope1Year, systemIndex)"
+                                class="inline-flex min-h-10 items-center gap-1.5 rounded-xl px-3 text-xs font-semibold text-danger transition-colors hover:bg-red-50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-danger"
+                                :aria-label="'Xóa hệ thống lạnh số ' + (systemIndex + 1)"
+                              >
+                                <i data-lucide="trash-2" class="h-4 w-4" aria-hidden="true"></i>
+                                <span>Xóa</span>
+                              </button>
+                            </div>
 
-                        <!-- Công suất lạnh -->
-                        <div>
-                          <label
-                            class="block text-sm font-medium text-txprimary mb-1.5"
-                          >
-                            Công suất lạnh <span class="text-danger">*</span>
-                          </label>
-                          <input
-                            type="text"
-                            x-model="formData.inventory[activeScope1Year].refrigeration.capacity"
-                            :aria-label="'Công suất lạnh năm ' + activeScope1Year"
-                            placeholder="Ví dụ: 2 HP, 50 HP, 60.000 BTU/h"
-                            class="w-full h-11 px-3.5 rounded-xl border border-borderui bg-white text-sm focus-ring"
-                          />
-                          <span class="text-xs text-txsecondary mt-1 block"
-                            >Khớp cột: Công suất lạnh (HP hoặc BTU/giờ)</span
-                          >
-                        </div>
+                            <div class="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4">
+                              <div>
+                                <label class="mb-1.5 block text-sm font-medium text-txprimary">
+                                  Thiết bị lạnh <span class="text-danger">*</span>
+                                </label>
+                                <select
+                                  x-model="system.equipment"
+                                  :aria-label="'Thiết bị lạnh ' + (systemIndex + 1) + ' năm ' + activeScope1Year"
+                                  class="h-11 w-full rounded-xl border border-borderui bg-white px-3.5 text-sm focus-ring"
+                                >
+                                  <option value="Máy lạnh">Máy lạnh dân dụng / cục bộ</option>
+                                  <option value="Chiller">Hệ thống Chiller làm lạnh nước</option>
+                                  <option value="VRV/VRF">Điều hòa trung tâm VRV / VRF</option>
+                                  <option value="Kho lạnh">Kho lạnh công nghiệp / Tủ đông</option>
+                                  <option value="Khác">Thiết bị lạnh khác</option>
+                                </select>
+                                <input
+                                  x-show="system.equipment === 'Khác'"
+                                  type="text"
+                                  x-model="system.equipment_other"
+                                  :aria-label="'Thiết bị lạnh khác của hệ thống ' + (systemIndex + 1)"
+                                  placeholder="Nhập thiết bị lạnh khác..."
+                                  class="mt-2 h-11 w-full rounded-xl border border-borderui bg-white px-3.5 text-sm focus-ring"
+                                />
+                              </div>
 
-                        <!-- Loại môi chất lạnh -->
-                        <div>
-                          <label
-                            class="block text-sm font-medium text-txprimary mb-1.5"
-                          >
-                            Loại môi chất lạnh (Gas)
-                            <span class="text-danger">*</span>
-                          </label>
-                          <select
-                            x-model="formData.inventory[activeScope1Year].refrigeration.gas_type"
-                            :aria-label="'Loại môi chất lạnh năm ' + activeScope1Year"
-                            class="w-full h-11 px-3.5 rounded-xl border border-borderui bg-white text-sm focus-ring"
-                          >
-                            <option value="R22">R22</option>
-                            <option value="R410A">R410A</option>
-                            <option value="R134a">R134a</option>
-                            <option value="R32">R32</option>
-                            <option value="R404A">R404A</option>
-                            <option value="R407C">R407C</option>
-                            <option value="R507A">R507A</option>
-                            <option value="Khác">Gas lạnh khác</option>
-                          </select>
-                          <input
-                            x-show="formData.inventory[activeScope1Year].refrigeration.gas_type === 'Khác'"
-                            type="text"
-                            x-model="formData.inventory[activeScope1Year].refrigeration.gas_type_other"
-                            :aria-label="'Môi chất lạnh khác năm ' + activeScope1Year"
-                            placeholder="Nhập loại môi chất lạnh khác..."
-                            class="w-full h-11 px-3.5 mt-2 rounded-xl border border-borderui bg-white text-sm focus-ring"
-                          />
-                          <span class="text-xs text-txsecondary mt-1 block"
-                            >Khớp cột: Loại môi chất lạnh</span
-                          >
-                        </div>
+                              <div>
+                                <label class="mb-1.5 block text-sm font-medium text-txprimary">
+                                  Công suất lạnh <span class="text-danger">*</span>
+                                </label>
+                                <input
+                                  type="text"
+                                  x-model="system.capacity"
+                                  :aria-label="'Công suất hệ thống lạnh ' + (systemIndex + 1)"
+                                  placeholder="Ví dụ: 2 HP, 60.000 BTU/h"
+                                  class="h-11 w-full rounded-xl border border-borderui bg-white px-3.5 text-sm focus-ring"
+                                />
+                              </div>
 
-                        <!-- Lượng môi chất nạp đầy (kg) -->
-                        <div>
-                          <label
-                            class="block text-sm font-medium text-txprimary mb-1.5"
-                          >
-                            Lượng gas khi nạp đầy (kg)
-                            <span class="text-danger">*</span>
-                          </label>
-                          <input
-                            type="number"
-                            step="any"
-                            min="0"
-                            x-model.number="formData.inventory[activeScope1Year].refrigeration.full_charge_kg"
-                            :aria-label="'Lượng gas nạp đầy năm ' + activeScope1Year"
-                            placeholder="Ví dụ: 10 (kg)"
-                            class="w-full h-11 px-3.5 rounded-xl border border-borderui bg-white text-sm font-mono focus-ring"
-                          />
-                          <span class="text-xs text-txsecondary mt-1 block"
-                            >Khớp cột: Lượng môi chất nạp đầy</span
-                          >
-                        </div>
+                              <div>
+                                <label class="mb-1.5 block text-sm font-medium text-txprimary">
+                                  Loại môi chất lạnh <span class="text-danger">*</span>
+                                </label>
+                                <select
+                                  x-model="system.gas_type"
+                                  :aria-label="'Môi chất lạnh của hệ thống ' + (systemIndex + 1)"
+                                  class="h-11 w-full rounded-xl border border-borderui bg-white px-3.5 text-sm focus-ring"
+                                >
+                                  <option value="R22">R22</option>
+                                  <option value="R410A">R410A</option>
+                                  <option value="R134a">R134a</option>
+                                  <option value="R32">R32</option>
+                                  <option value="R404A">R404A</option>
+                                  <option value="R407C">R407C</option>
+                                  <option value="R507A">R507A</option>
+                                  <option value="Khác">Gas lạnh khác</option>
+                                </select>
+                                <input
+                                  x-show="system.gas_type === 'Khác'"
+                                  type="text"
+                                  x-model="system.gas_type_other"
+                                  :aria-label="'Môi chất lạnh khác của hệ thống ' + (systemIndex + 1)"
+                                  placeholder="Nhập loại môi chất lạnh khác..."
+                                  class="mt-2 h-11 w-full rounded-xl border border-borderui bg-white px-3.5 text-sm focus-ring"
+                                />
+                              </div>
+
+                              <div>
+                                <label class="mb-1.5 block text-sm font-medium text-txprimary">
+                                  Lượng gas khi nạp đầy (kg) <span class="text-danger">*</span>
+                                </label>
+                                <input
+                                  type="number"
+                                  step="any"
+                                  min="0"
+                                  x-model.number="system.full_charge_kg"
+                                  :aria-label="'Lượng gas nạp đầy của hệ thống ' + (systemIndex + 1)"
+                                  placeholder="Ví dụ: 10"
+                                  class="h-11 w-full rounded-xl border border-borderui bg-white px-3.5 text-sm font-mono focus-ring"
+                                />
+                              </div>
+                            </div>
+
+                            <template x-if="hasErrorPrefix('inventory.' + activeScope1Year + '.refrigeration_systems.' + systemIndex)">
+                              <p class="flex items-center gap-1 text-xs text-danger" role="alert">
+                                <i data-lucide="alert-circle" class="h-3.5 w-3.5" aria-hidden="true"></i>
+                                <span x-text="getFirstErrorMessage('inventory.' + activeScope1Year + '.refrigeration_systems.' + systemIndex)"></span>
+                              </p>
+                            </template>
+                          </div>
+                        </template>
+
+                        <button
+                          type="button"
+                          @click="addRefrigerationSystem(activeScope1Year)"
+                          class="inline-flex min-h-11 items-center gap-2 rounded-xl border border-dashed border-[#003c33]/40 bg-white px-4 text-sm font-bold text-[#003c33] transition-colors hover:border-[#003c33] hover:bg-[#F0F6F3] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#003c33]"
+                        >
+                          <i data-lucide="plus" class="h-4 w-4" aria-hidden="true"></i>
+                          <span>Thêm hệ thống lạnh</span>
+                        </button>
                       </div>
                       <template
-                        x-if="hasErrorPrefix('inventory.' + activeScope1Year + '.refrigeration')"
+                        x-if="hasError('inventory.' + activeScope1Year + '.refrigeration_systems')"
                       >
-                        <p class="text-xs text-danger flex items-center space-x-1" role="alert">
+                        <p class="flex items-center gap-1 text-xs text-danger" role="alert">
                           <i data-lucide="alert-circle" class="w-3.5 h-3.5" aria-hidden="true"></i>
-                          <span x-text="getFirstErrorMessage('inventory.' + activeScope1Year + '.refrigeration')"></span>
+                          <span x-text="getErrorMessage('inventory.' + activeScope1Year + '.refrigeration_systems')"></span>
                         </p>
                       </template>
                     </div>

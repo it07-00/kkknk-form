@@ -217,7 +217,7 @@
                       </template>
                     </div>
 
-                    <!-- Hiệu quả % giảm nhẹ so với kế hoạch (Tự động tính toán - Khớp cột K file Excel) -->
+                    <!-- Hiệu quả % giảm nhẹ so với kế hoạch -->
                     <div
                       class="sm:col-span-2 bg-[#F0F6F3] border border-[#003c33]/20 rounded-2xl p-4 flex flex-col sm:flex-row sm:items-center justify-between gap-3 shadow-subtle"
                     >
@@ -232,8 +232,8 @@
                             Hiệu quả % giảm nhẹ so với kế hoạch (%)
                           </div>
                           <div class="text-xs text-txsecondary">
-                            Khớp cột K trong file Excel Sở Công Thương (Công
-                            thức: Lượng thực tế ÷ Lượng kế hoạch × 100%)
+                            Tự động tính theo công thức: Lượng thực tế ÷ Lượng
+                            kế hoạch × 100%
                           </div>
                         </div>
                       </div>

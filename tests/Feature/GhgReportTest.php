@@ -24,6 +24,10 @@ class GhgReportTest extends TestCase
         $this->assertStringContainsString('@submit.prevent="handleNext()"', $content);
         $response->assertDontSee('Dữ liệu mẫu từ Sở Công Thương');
         $response->assertDontSee('Nạp số liệu mẫu tự động');
+        $response->assertDontSee('Mẫu Excel');
+        $response->assertDontSee('theo mẫu biểu Excel');
+        $response->assertDontSee('Cơ chế phân tách Tab thông minh');
+        $response->assertDontSee('Dữ liệu cần chuẩn bị trước khi kê khai');
         $response->assertDontSee('Vui lòng kiểm tra và hoàn thành các thông tin chưa hợp lệ bên dưới');
         $response->assertDontSee('doanh nghiệp có phát sinh nguồn phát thải thuộc Phạm vi 1 không?');
         $response->assertDontSee('Không có nguồn phát thải');
@@ -62,20 +66,67 @@ class GhgReportTest extends TestCase
         $this->assertDatabaseCount('ghg_submissions', 0);
     }
 
+    public function test_submission_requires_legal_representative_phone(): void
+    {
+        $payload = $this->validPayload();
+        $payload['formData']['company']['legal_representative']['phone'] = '';
+
+        $response = $this->postJson('/api/submissions', $payload);
+
+        $response->assertUnprocessable()
+            ->assertInvalid([
+                'formData.company.legal_representative.phone' => 'Vui lòng nhập số điện thoại Người đại diện.',
+            ]);
+        $this->assertDatabaseCount('ghg_submissions', 0);
+    }
+
+    public function test_submission_rejects_non_mobile_contact_phone_numbers(): void
+    {
+        $payload = $this->validPayload();
+        $payload['formData']['company']['legal_representative']['phone'] = '02838291234';
+        $payload['formData']['company']['technical_contact']['phone'] = '1234567890';
+
+        $response = $this->postJson('/api/submissions', $payload);
+
+        $response->assertUnprocessable()
+            ->assertInvalid([
+                'formData.company.legal_representative.phone' => 'Số điện thoại Người đại diện phải là số di động Việt Nam hợp lệ.',
+                'formData.company.technical_contact.phone' => 'Số điện thoại cán bộ phụ trách phải là số di động Việt Nam hợp lệ.',
+            ]);
+        $this->assertDatabaseCount('ghg_submissions', 0);
+    }
+
+    public function test_submission_normalizes_formatted_mobile_phone_numbers(): void
+    {
+        $payload = $this->validPayload();
+        $payload['formData']['company']['legal_representative']['phone'] = '0912 345 678';
+        $payload['formData']['company']['technical_contact']['phone'] = '+84 987 654 321';
+
+        $response = $this->postJson('/api/submissions', $payload);
+
+        $response->assertCreated();
+
+        $company = GhgSubmission::query()->sole()->data['company'];
+        $this->assertSame('0912345678', $company['legal_representative']['phone']);
+        $this->assertSame('0987654321', $company['technical_contact']['phone']);
+    }
+
     public function test_submission_rejects_incomplete_boiler_and_refrigeration_details(): void
     {
         $payload = $this->validPayload();
         $payload['formData']['inventory']['2024']['has_scope1'] = true;
         $payload['formData']['inventory']['2024']['has_boiler'] = true;
         $payload['formData']['inventory']['2024']['has_cooling'] = true;
-        $payload['formData']['inventory']['2024']['boiler'] = [
+        $payload['formData']['inventory']['2024']['boilers'] = [[
+            'id' => 'boiler-1',
             'capacity' => '',
             'fuel' => 'Khác',
             'fuel_other' => '',
             'consumption' => null,
             'unit' => '',
-        ];
-        $payload['formData']['inventory']['2024']['refrigeration'] = [
+        ]];
+        $payload['formData']['inventory']['2024']['refrigeration_systems'] = [[
+            'id' => 'cooling-1',
             'equipment' => 'Khác',
             'equipment_other' => '',
             'capacity' => '',
@@ -83,7 +134,7 @@ class GhgReportTest extends TestCase
             'gas_type_other' => '',
             'full_charge_kg' => null,
             'recharge_kg' => null,
-        ];
+        ]];
         $payload['formData']['inventory']['2024']['scope1_sources'] = [
             [
                 'id' => 'source-1',
@@ -98,16 +149,106 @@ class GhgReportTest extends TestCase
 
         $response->assertUnprocessable()
             ->assertInvalid([
-                'formData.inventory.2024.boiler.capacity',
-                'formData.inventory.2024.boiler.fuel_other',
-                'formData.inventory.2024.boiler.consumption',
-                'formData.inventory.2024.boiler.unit',
-                'formData.inventory.2024.refrigeration.equipment_other',
-                'formData.inventory.2024.refrigeration.capacity',
-                'formData.inventory.2024.refrigeration.gas_type_other',
-                'formData.inventory.2024.refrigeration.full_charge_kg',
+                'formData.inventory.2024.boilers.0.capacity',
+                'formData.inventory.2024.boilers.0.fuel_other',
+                'formData.inventory.2024.boilers.0.consumption',
+                'formData.inventory.2024.boilers.0.unit',
+                'formData.inventory.2024.refrigeration_systems.0.equipment_other',
+                'formData.inventory.2024.refrigeration_systems.0.capacity',
+                'formData.inventory.2024.refrigeration_systems.0.gas_type_other',
+                'formData.inventory.2024.refrigeration_systems.0.full_charge_kg',
             ]);
         $this->assertDatabaseCount('ghg_submissions', 0);
+    }
+
+    public function test_submission_stores_multiple_boilers_and_refrigeration_systems(): void
+    {
+        $payload = $this->validPayload();
+        $payload['formData']['inventory']['2024']['has_boiler'] = true;
+        $payload['formData']['inventory']['2024']['boilers'] = [
+            [
+                'id' => 'boiler-1',
+                'capacity' => '3 tấn hơi/giờ',
+                'fuel' => 'Sinh khối',
+                'fuel_other' => '',
+                'consumption' => 500,
+                'unit' => 'tấn/năm',
+            ],
+            [
+                'id' => 'boiler-2',
+                'capacity' => '5 tấn hơi/giờ',
+                'fuel' => 'Dầu DO',
+                'fuel_other' => '',
+                'consumption' => 700,
+                'unit' => 'lít/năm',
+            ],
+        ];
+        $payload['formData']['inventory']['2024']['has_cooling'] = true;
+        $payload['formData']['inventory']['2024']['refrigeration_systems'] = [
+            [
+                'id' => 'cooling-1',
+                'equipment' => 'Chiller',
+                'equipment_other' => '',
+                'capacity' => '50 HP',
+                'gas_type' => 'R134a',
+                'gas_type_other' => '',
+                'full_charge_kg' => 20,
+                'recharge_kg' => 2,
+            ],
+            [
+                'id' => 'cooling-2',
+                'equipment' => 'VRV/VRF',
+                'equipment_other' => '',
+                'capacity' => '100 HP',
+                'gas_type' => 'R410A',
+                'gas_type_other' => '',
+                'full_charge_kg' => 30,
+                'recharge_kg' => 3,
+            ],
+        ];
+
+        $response = $this->postJson('/api/submissions', $payload);
+
+        $response->assertCreated();
+
+        $inventory = GhgSubmission::query()->sole()->data['inventory']['2024'];
+        $this->assertCount(2, $inventory['boilers']);
+        $this->assertCount(2, $inventory['refrigeration_systems']);
+        $this->assertSame('5 tấn hơi/giờ', $inventory['boilers'][1]['capacity']);
+        $this->assertSame('R410A', $inventory['refrigeration_systems'][1]['gas_type']);
+    }
+
+    public function test_submission_normalizes_legacy_single_equipment_payload(): void
+    {
+        $payload = $this->validPayload();
+        $payload['formData']['inventory']['2024']['has_boiler'] = true;
+        $payload['formData']['inventory']['2024']['boiler'] = [
+            'capacity' => '3 tấn hơi/giờ',
+            'fuel' => 'Sinh khối',
+            'fuel_other' => '',
+            'consumption' => 500,
+            'unit' => 'tấn/năm',
+        ];
+        $payload['formData']['inventory']['2024']['has_cooling'] = true;
+        $payload['formData']['inventory']['2024']['refrigeration'] = [
+            'equipment' => 'Máy lạnh',
+            'equipment_other' => '',
+            'capacity' => '2 HP',
+            'gas_type' => 'R22',
+            'gas_type_other' => '',
+            'full_charge_kg' => 10,
+            'recharge_kg' => 2,
+        ];
+
+        $response = $this->postJson('/api/submissions', $payload);
+
+        $response->assertCreated();
+
+        $inventory = GhgSubmission::query()->sole()->data['inventory']['2024'];
+        $this->assertCount(1, $inventory['boilers']);
+        $this->assertCount(1, $inventory['refrigeration_systems']);
+        $this->assertArrayNotHasKey('boiler', $inventory);
+        $this->assertArrayNotHasKey('refrigeration', $inventory);
     }
 
     public function test_submission_rejects_incomplete_custom_scope_one_source(): void

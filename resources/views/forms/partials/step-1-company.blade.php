@@ -265,17 +265,35 @@
                         class="block text-sm font-medium text-txprimary mb-1.5"
                       >
                         Số điện thoại Người đại diện
-                        <span class="text-txsecondary font-normal"
-                          >(Không bắt buộc)</span
-                        >
+                        <span class="text-danger">*</span>
                       </label>
                       <input
                         type="tel"
                         id="legal_rep_phone"
                         x-model="formData.company.legal_representative.phone"
+                        @input="clearFieldError('company.legal_representative.phone')"
+                        @blur="validateField('company.legal_representative.phone')"
+                        :aria-invalid="hasError('company.legal_representative.phone') ? 'true' : 'false'"
+                        :aria-describedby="hasError('company.legal_representative.phone') ? 'legal_rep_phone_error' : null"
+                        aria-required="true"
+                        autocomplete="tel"
                         placeholder="Ví dụ: 0912 345 678"
-                        class="w-full h-11 px-3.5 rounded-xl border border-borderui bg-white text-sm transition-all focus-ring"
+                        class="w-full h-11 px-3.5 rounded-xl border text-sm transition-all focus-ring"
+                        :class="hasError('company.legal_representative.phone') ? 'border-danger bg-red-50/20 text-danger' : 'border-borderui bg-white text-txprimary'"
                       />
+                      <template
+                        x-if="hasError('company.legal_representative.phone')"
+                      >
+                        <p
+                          id="legal_rep_phone_error"
+                          class="text-xs text-danger mt-1.5 flex items-center space-x-1"
+                        >
+                          <i data-lucide="alert-circle" class="w-3.5 h-3.5"></i>
+                          <span
+                            x-text="getErrorMessage('company.legal_representative.phone')"
+                          ></span>
+                        </p>
+                      </template>
                     </div>
                   </div>
                 </div>
@@ -345,6 +363,7 @@
                         :aria-invalid="hasError('company.technical_contact.phone') ? 'true' : 'false'"
                         :aria-describedby="hasError('company.technical_contact.phone') ? 'technical_contact_phone_error' : null"
                         aria-required="true"
+                        autocomplete="tel"
                         placeholder="Ví dụ: 0987 654 321"
                         class="w-full h-11 px-3.5 rounded-xl border text-sm transition-all focus-ring"
                         :class="hasError('company.technical_contact.phone') ? 'border-danger bg-red-50/20 text-danger' : 'border-borderui bg-white text-txprimary'"

@@ -6,14 +6,15 @@
   <div class="flex min-h-screen items-center justify-center px-4 py-12 sm:px-6">
     <div class="w-full max-w-md">
       <div class="mb-6 text-center">
-        <div class="mx-auto flex h-16 w-16 items-center justify-center rounded-2xl bg-emerald-950 text-lime-300 shadow-lg" aria-hidden="true">
-          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" class="h-8 w-8" stroke-width="2">
-            <rect width="18" height="11" x="3" y="11" rx="2" />
-            <path d="M7 11V7a5 5 0 0 1 10 0v4" />
-          </svg>
+        <div class="mx-auto flex h-20 w-20 items-center justify-center" aria-hidden="true">
+          <img
+            src="{{ asset('images/logo-so-cong-thuong.png') }}"
+            alt="Logo Sở Công Thương TP. Hồ Chí Minh"
+            class="h-20 w-20 object-contain drop-shadow-md"
+          />
         </div>
         <h1 class="mt-4 text-2xl font-bold tracking-tight text-slate-950">Đăng nhập quản trị</h1>
-        <p class="mt-2 text-sm text-slate-600">Quản lý hồ sơ kiểm kê khí nhà kính và kế hoạch giảm nhẹ.</p>
+        <p class="mt-2 text-sm text-slate-600">Sở Công Thương TP. Hồ Chí Minh — Cổng tiếp nhận KKKNK</p>
       </div>
 
       <div class="rounded-3xl border border-slate-200 bg-white p-6 shadow-xl shadow-emerald-950/5 sm:p-8">

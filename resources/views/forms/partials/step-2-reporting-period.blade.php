@@ -193,7 +193,7 @@
                       </div>
                     </div>
 
-                    <!-- Option: Chu kỳ 2024–2026 (Theo mẫu Excel) -->
+                    <!-- Option: Chu kỳ 2024–2026 -->
                     <div
                       @click="selectReportingOption('2024_2026')"
                       role="radio"
@@ -204,11 +204,6 @@
                       class="relative p-5 rounded-2xl border-2 cursor-pointer transition-all duration-200 flex flex-col justify-between"
                       :class="reportingOption === '2024_2026' ? 'border-[#003c33] bg-[#003c33]/5 ring-1 ring-[#003c33] shadow-card' : 'border-borderui bg-white hover:border-[#003c33]/30 hover:bg-[#F8FAF9]'"
                     >
-                      <span
-                        class="absolute -top-3 left-1/2 -translate-x-1/2 px-2.5 py-0.5 rounded-full text-[11px] font-bold tracking-wide uppercase bg-[#003c33] text-[#9fe870] border border-[#9fe870]/30 shadow-sm whitespace-nowrap z-10"
-                      >
-                        Mẫu Excel
-                      </span>
                       <div class="flex items-start justify-between">
                         <div
                           class="w-11 h-11 rounded-2xl bg-[#003c33]/10 text-[#003c33] flex items-center justify-center font-bold shrink-0"
@@ -233,8 +228,7 @@
                         <p
                           class="text-xs text-txsecondary mt-1 leading-relaxed"
                         >
-                          Khai báo chu kỳ 3 năm gồm 2024, 2025 và 2026 (theo mẫu
-                          biểu Excel).
+                          Khai báo chu kỳ 3 năm gồm 2024, 2025 và 2026.
                         </p>
                       </div>
                     </div>
@@ -250,35 +244,6 @@
                   </template>
                 </div>
 
-                <!-- Information box explaining dynamic tabs behavior -->
-                <div
-                  class="bg-[#F0F6F3] border border-[#003c33]/15 rounded-2xl p-5 flex items-start space-x-3.5 text-sm text-[#1e3b32]"
-                >
-                  <div
-                    class="w-7 h-7 rounded-xl bg-[#003c33] text-[#9fe870] flex items-center justify-center flex-shrink-0 mt-0.5"
-                  >
-                    <i data-lucide="lightbulb" class="w-4 h-4"></i>
-                  </div>
-                  <div class="leading-relaxed">
-                    <strong class="font-bold text-[#003c33]"
-                      >Cơ chế phân tách Tab thông minh:</strong
-                    >
-                    Khi chọn <strong>"2024 & 2025"</strong>, ở các bước tiếp
-                    theo (Phạm vi 1, Phạm vi 2, Kết quả kiểm kê), hệ thống sẽ
-                    hiển thị bộ chuyển Tab tiện lợi
-                    <span
-                      class="font-mono bg-[#9fe870]/30 text-[#003c33] font-bold px-2 py-0.5 rounded-lg"
-                      >[Năm 2024]</span
-                    >
-                    và
-                    <span
-                      class="font-mono bg-[#9fe870]/30 text-[#003c33] font-bold px-2 py-0.5 rounded-lg"
-                      >[Năm 2025]</span
-                    >
-                    giúp Quý Doanh nghiệp quản lý số liệu minh bạch, tách bạch,
-                    tránh nhầm lẫn.
-                  </div>
-                </div>
               </div>
             </div>
 

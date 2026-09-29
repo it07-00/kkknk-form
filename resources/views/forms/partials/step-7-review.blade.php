@@ -297,7 +297,7 @@
                         </div>
                       </div>
 
-                      <!-- Technical Equipment & TOE Summary (Theo mẫu Excel) -->
+                      <!-- Technical Equipment & TOE Summary -->
                       <div
                         class="grid grid-cols-1 sm:grid-cols-3 gap-3 text-xs pt-1"
                       >
@@ -310,29 +310,17 @@
                             >Lò hơi (Boiler):</span
                           >
                           <template x-if="formData.inventory[yr].has_boiler">
-                            <div class="text-txprimary mt-1 space-y-0.5">
-                              <div>
-                                Công suất:
-                                <strong
-                                  class="font-mono"
-                                  x-text="formData.inventory[yr].boiler.capacity || '---'"
-                                ></strong>
-                              </div>
-                              <div>
-                                Nhiên liệu:
-                                <strong
-                                  x-text="formData.inventory[yr].boiler.fuel === 'Khác' ? formData.inventory[yr].boiler.fuel_other : formData.inventory[yr].boiler.fuel"
-                                ></strong>
-                              </div>
-                              <div
-                                x-show="formData.inventory[yr].boiler.consumption"
-                              >
-                                Lượng đốt:
-                                <strong
-                                  class="font-mono"
-                                  x-text="formatNumber(formData.inventory[yr].boiler.consumption) + ' ' + formData.inventory[yr].boiler.unit"
-                                ></strong>
-                              </div>
+                            <div class="mt-1 space-y-2 text-txprimary">
+                              <template x-for="(boiler, boilerIndex) in formData.inventory[yr].boilers" :key="boiler.id">
+                                <div class="border-t border-borderui pt-2 first:border-t-0 first:pt-0">
+                                  <div class="font-bold text-[#003c33]" x-text="'Lò hơi #' + (boilerIndex + 1)"></div>
+                                  <div>Công suất: <strong class="font-mono" x-text="boiler.capacity || '---'"></strong></div>
+                                  <div>Nhiên liệu: <strong x-text="boiler.fuel === 'Khác' ? boiler.fuel_other : boiler.fuel"></strong></div>
+                                  <div x-show="boiler.consumption !== null && boiler.consumption !== ''">
+                                    Lượng đốt: <strong class="font-mono" x-text="formatNumber(boiler.consumption) + ' ' + boiler.unit"></strong>
+                                  </div>
+                                </div>
+                              </template>
                             </div>
                           </template>
                           <template x-if="!formData.inventory[yr].has_boiler">
@@ -351,34 +339,20 @@
                             >Hệ thống lạnh (Chiller/HVAC):</span
                           >
                           <template x-if="formData.inventory[yr].has_cooling">
-                            <div class="text-txprimary mt-1 space-y-0.5">
-                              <div>
-                                Thiết bị:
-                                <strong
-                                  x-text="formData.inventory[yr].refrigeration.equipment === 'Khác' ? formData.inventory[yr].refrigeration.equipment_other : formData.inventory[yr].refrigeration.equipment"
-                                ></strong>
-                                (<span
-                                  class="font-mono"
-                                  x-text="formData.inventory[yr].refrigeration.capacity"
-                                ></span
-                                >)
-                              </div>
-                              <div>
-                                Môi chất:
-                                <strong
-                                  class="font-mono"
-                                  x-text="formData.inventory[yr].refrigeration.gas_type === 'Khác' ? formData.inventory[yr].refrigeration.gas_type_other : formData.inventory[yr].refrigeration.gas_type"
-                                ></strong>
-                              </div>
-                              <div
-                                x-show="formData.inventory[yr].refrigeration.full_charge_kg"
-                              >
-                                Nạp đầy:
-                                <strong
-                                  class="font-mono"
-                                  x-text="formData.inventory[yr].refrigeration.full_charge_kg + ' kg'"
-                                ></strong>
-                              </div>
+                            <div class="mt-1 space-y-2 text-txprimary">
+                              <template x-for="(system, systemIndex) in formData.inventory[yr].refrigeration_systems" :key="system.id">
+                                <div class="border-t border-borderui pt-2 first:border-t-0 first:pt-0">
+                                  <div class="font-bold text-[#003c33]" x-text="'Hệ thống #' + (systemIndex + 1)"></div>
+                                  <div>
+                                    Thiết bị: <strong x-text="system.equipment === 'Khác' ? system.equipment_other : system.equipment"></strong>
+                                    (<span class="font-mono" x-text="system.capacity"></span>)
+                                  </div>
+                                  <div>Môi chất: <strong class="font-mono" x-text="system.gas_type === 'Khác' ? system.gas_type_other : system.gas_type"></strong></div>
+                                  <div x-show="system.full_charge_kg !== null && system.full_charge_kg !== ''">
+                                    Nạp đầy: <strong class="font-mono" x-text="system.full_charge_kg + ' kg'"></strong>
+                                  </div>
+                                </div>
+                              </template>
                             </div>
                           </template>
                           <template x-if="!formData.inventory[yr].has_cooling">

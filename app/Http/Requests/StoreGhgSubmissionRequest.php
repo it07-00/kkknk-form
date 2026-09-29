@@ -44,12 +44,42 @@ class StoreGhgSubmissionRequest extends FormRequest
             return;
         }
 
+        foreach (['legal_representative', 'technical_contact'] as $contact) {
+            $phone = $formData['company'][$contact]['phone'] ?? null;
+
+            if (! is_string($phone)) {
+                continue;
+            }
+
+            $normalizedPhone = preg_replace('/[\s.-]+/u', '', trim($phone));
+
+            if (is_string($normalizedPhone) && str_starts_with($normalizedPhone, '+84')) {
+                $normalizedPhone = '0'.substr($normalizedPhone, 3);
+            }
+
+            $formData['company'][$contact]['phone'] = $normalizedPhone;
+        }
+
         $inventory = $formData['inventory'] ?? null;
 
         if (is_array($inventory)) {
             foreach ($inventory as $year => $yearInventory) {
                 if (is_array($yearInventory)) {
-                    $formData['inventory'][$year]['has_scope1'] = true;
+                    if (! array_key_exists('boilers', $yearInventory)) {
+                        $legacyBoiler = $yearInventory['boiler'] ?? null;
+                        $yearInventory['boilers'] = is_array($legacyBoiler) ? [$legacyBoiler] : [];
+                    }
+
+                    if (! array_key_exists('refrigeration_systems', $yearInventory)) {
+                        $legacyRefrigeration = $yearInventory['refrigeration'] ?? null;
+                        $yearInventory['refrigeration_systems'] = is_array($legacyRefrigeration)
+                            ? [$legacyRefrigeration]
+                            : [];
+                    }
+
+                    unset($yearInventory['boiler'], $yearInventory['refrigeration']);
+                    $yearInventory['has_scope1'] = true;
+                    $formData['inventory'][$year] = $yearInventory;
                 }
             }
         }
@@ -72,31 +102,35 @@ class StoreGhgSubmissionRequest extends FormRequest
             'formData.company.email' => ['required', 'email:rfc', 'max:255'],
             'formData.company.legal_representative' => ['required', 'array:name,phone'],
             'formData.company.legal_representative.name' => ['required', 'string', 'max:255'],
-            'formData.company.legal_representative.phone' => ['nullable', 'string', 'max:30'],
+            'formData.company.legal_representative.phone' => ['required', 'string', 'max:30', 'regex:/^0(?:3|5|7|8|9)[0-9]{8}$/'],
             'formData.company.technical_contact' => ['required', 'array:name,phone'],
             'formData.company.technical_contact.name' => ['required', 'string', 'max:255'],
-            'formData.company.technical_contact.phone' => ['required', 'string', 'max:30'],
+            'formData.company.technical_contact.phone' => ['required', 'string', 'max:30', 'regex:/^0(?:3|5|7|8|9)[0-9]{8}$/'],
             'formData.reporting_years' => ['required', 'array', 'min:1', 'max:3'],
             'formData.reporting_years.*' => ['required', 'string', 'distinct', Rule::in(self::REPORTING_YEARS)],
             'formData.inventory' => ['required', 'array:2024,2025,2026'],
-            'formData.inventory.*' => ['array:has_scope1,has_boiler,boiler,has_cooling,refrigeration,scope1_sources,grid_electricity_kwh,solar_electricity_kwh,energy_toe,scope1_emissions,scope2_emissions,report_method,report_url'],
+            'formData.inventory.*' => ['array:has_scope1,has_boiler,boilers,has_cooling,refrigeration_systems,scope1_sources,grid_electricity_kwh,solar_electricity_kwh,energy_toe,scope1_emissions,scope2_emissions,report_method,report_url'],
             'formData.inventory.*.has_scope1' => ['required', 'boolean'],
             'formData.inventory.*.has_boiler' => ['nullable', 'boolean'],
-            'formData.inventory.*.boiler' => ['nullable', 'array:capacity,fuel,fuel_other,consumption,unit'],
-            'formData.inventory.*.boiler.capacity' => ['nullable', 'string', 'max:255'],
-            'formData.inventory.*.boiler.fuel' => ['nullable', 'string', Rule::in(['Sinh khối', 'Than đá', 'Dầu DO', 'Dầu FO', 'LPG', 'Khí tự nhiên', 'Củi gỗ', 'Viên nén', 'Khác'])],
-            'formData.inventory.*.boiler.fuel_other' => ['nullable', 'string', 'max:255'],
-            'formData.inventory.*.boiler.consumption' => ['nullable', 'numeric', 'min:0'],
-            'formData.inventory.*.boiler.unit' => ['nullable', 'string', Rule::in(['tấn/năm', 'kg/năm', 'm³/năm', 'lít/năm'])],
+            'formData.inventory.*.boilers' => ['nullable', 'array', 'max:50'],
+            'formData.inventory.*.boilers.*' => ['array:id,capacity,fuel,fuel_other,consumption,unit'],
+            'formData.inventory.*.boilers.*.id' => ['nullable', 'string', 'max:100'],
+            'formData.inventory.*.boilers.*.capacity' => ['nullable', 'string', 'max:255'],
+            'formData.inventory.*.boilers.*.fuel' => ['nullable', 'string', Rule::in(['Sinh khối', 'Than đá', 'Dầu DO', 'Dầu FO', 'LPG', 'Khí tự nhiên', 'Củi gỗ', 'Viên nén', 'Khác'])],
+            'formData.inventory.*.boilers.*.fuel_other' => ['nullable', 'string', 'max:255'],
+            'formData.inventory.*.boilers.*.consumption' => ['nullable', 'numeric', 'min:0'],
+            'formData.inventory.*.boilers.*.unit' => ['nullable', 'string', Rule::in(['tấn/năm', 'kg/năm', 'm³/năm', 'lít/năm'])],
             'formData.inventory.*.has_cooling' => ['nullable', 'boolean'],
-            'formData.inventory.*.refrigeration' => ['nullable', 'array:equipment,equipment_other,capacity,gas_type,gas_type_other,full_charge_kg,recharge_kg'],
-            'formData.inventory.*.refrigeration.equipment' => ['nullable', 'string', Rule::in(['Máy lạnh', 'Chiller', 'VRV/VRF', 'Kho lạnh', 'Khác'])],
-            'formData.inventory.*.refrigeration.equipment_other' => ['nullable', 'string', 'max:255'],
-            'formData.inventory.*.refrigeration.capacity' => ['nullable', 'string', 'max:255'],
-            'formData.inventory.*.refrigeration.gas_type' => ['nullable', 'string', Rule::in(['R22', 'R410A', 'R134a', 'R32', 'R404A', 'R407C', 'R507A', 'Khác'])],
-            'formData.inventory.*.refrigeration.gas_type_other' => ['nullable', 'string', 'max:255'],
-            'formData.inventory.*.refrigeration.full_charge_kg' => ['nullable', 'numeric', 'min:0'],
-            'formData.inventory.*.refrigeration.recharge_kg' => ['nullable', 'numeric', 'min:0'],
+            'formData.inventory.*.refrigeration_systems' => ['nullable', 'array', 'max:50'],
+            'formData.inventory.*.refrigeration_systems.*' => ['array:id,equipment,equipment_other,capacity,gas_type,gas_type_other,full_charge_kg,recharge_kg'],
+            'formData.inventory.*.refrigeration_systems.*.id' => ['nullable', 'string', 'max:100'],
+            'formData.inventory.*.refrigeration_systems.*.equipment' => ['nullable', 'string', Rule::in(['Máy lạnh', 'Chiller', 'VRV/VRF', 'Kho lạnh', 'Khác'])],
+            'formData.inventory.*.refrigeration_systems.*.equipment_other' => ['nullable', 'string', 'max:255'],
+            'formData.inventory.*.refrigeration_systems.*.capacity' => ['nullable', 'string', 'max:255'],
+            'formData.inventory.*.refrigeration_systems.*.gas_type' => ['nullable', 'string', Rule::in(['R22', 'R410A', 'R134a', 'R32', 'R404A', 'R407C', 'R507A', 'Khác'])],
+            'formData.inventory.*.refrigeration_systems.*.gas_type_other' => ['nullable', 'string', 'max:255'],
+            'formData.inventory.*.refrigeration_systems.*.full_charge_kg' => ['nullable', 'numeric', 'min:0'],
+            'formData.inventory.*.refrigeration_systems.*.recharge_kg' => ['nullable', 'numeric', 'min:0'],
             'formData.inventory.*.scope1_sources' => ['nullable', 'array'],
             'formData.inventory.*.scope1_sources.*' => ['array:id,source_type,source_type_other,fuel_type,fuel_type_other,quantity,unit,unit_other,note'],
             'formData.inventory.*.scope1_sources.*.id' => ['nullable', 'string', 'max:100'],
@@ -133,6 +167,10 @@ class StoreGhgSubmissionRequest extends FormRequest
         return [
             'formData.company.tax_code.required' => 'Vui lòng nhập mã số thuế doanh nghiệp.',
             'formData.company.tax_code.min' => 'Mã số thuế phải có ít nhất 8 ký tự.',
+            'formData.company.legal_representative.phone.required' => 'Vui lòng nhập số điện thoại Người đại diện.',
+            'formData.company.legal_representative.phone.regex' => 'Số điện thoại Người đại diện phải là số di động Việt Nam hợp lệ.',
+            'formData.company.technical_contact.phone.required' => 'Vui lòng nhập số điện thoại cán bộ phụ trách số liệu.',
+            'formData.company.technical_contact.phone.regex' => 'Số điện thoại cán bộ phụ trách phải là số di động Việt Nam hợp lệ.',
             'formData.reporting_years.*.in' => 'Kỳ báo cáo chỉ hỗ trợ các năm 2024, 2025 và 2026.',
             'formData.mitigation.implemented.required' => 'Vui lòng xác nhận tình trạng thực hiện biện pháp giảm nhẹ.',
             'formData.confirmation.accepted' => 'Vui lòng xác nhận tính chính xác của dữ liệu trước khi gửi.',
@@ -255,30 +293,56 @@ class StoreGhgSubmissionRequest extends FormRequest
         }
 
         if (($yearInventory['has_boiler'] ?? false) === true) {
-            $boiler = is_array($yearInventory['boiler'] ?? null) ? $yearInventory['boiler'] : [];
-            $this->requireValue($validator, "{$basePath}.boiler.capacity", $boiler['capacity'] ?? null, 'Vui lòng nhập công suất thiết kế lò hơi.');
-            $this->requireValue($validator, "{$basePath}.boiler.fuel", $boiler['fuel'] ?? null, 'Vui lòng chọn nhiên liệu đốt lò hơi.');
-            $this->requireValue($validator, "{$basePath}.boiler.consumption", $boiler['consumption'] ?? null, 'Vui lòng nhập lượng đốt trung bình trong năm.');
-            $this->requireValue($validator, "{$basePath}.boiler.unit", $boiler['unit'] ?? null, 'Vui lòng chọn đơn vị lượng đốt lò hơi.');
+            $boilers = is_array($yearInventory['boilers'] ?? null) ? $yearInventory['boilers'] : [];
 
-            if (($boiler['fuel'] ?? null) === 'Khác') {
-                $this->requireValue($validator, "{$basePath}.boiler.fuel_other", $boiler['fuel_other'] ?? null, 'Vui lòng nêu rõ nhiên liệu đốt lò hơi khác.');
+            if ($boilers === []) {
+                $validator->errors()->add("{$basePath}.boilers", 'Vui lòng khai báo ít nhất một lò hơi.');
+            }
+
+            foreach ($boilers as $index => $boiler) {
+                if (! is_array($boiler)) {
+                    continue;
+                }
+
+                $boilerPath = "{$basePath}.boilers.{$index}";
+                $this->requireValue($validator, "{$boilerPath}.capacity", $boiler['capacity'] ?? null, 'Vui lòng nhập công suất thiết kế lò hơi.');
+                $this->requireValue($validator, "{$boilerPath}.fuel", $boiler['fuel'] ?? null, 'Vui lòng chọn nhiên liệu đốt lò hơi.');
+                $this->requireValue($validator, "{$boilerPath}.consumption", $boiler['consumption'] ?? null, 'Vui lòng nhập lượng đốt trung bình trong năm.');
+                $this->requireValue($validator, "{$boilerPath}.unit", $boiler['unit'] ?? null, 'Vui lòng chọn đơn vị lượng đốt lò hơi.');
+
+                if (($boiler['fuel'] ?? null) === 'Khác') {
+                    $this->requireValue($validator, "{$boilerPath}.fuel_other", $boiler['fuel_other'] ?? null, 'Vui lòng nêu rõ nhiên liệu đốt lò hơi khác.');
+                }
             }
         }
 
         if (($yearInventory['has_cooling'] ?? false) === true) {
-            $refrigeration = is_array($yearInventory['refrigeration'] ?? null) ? $yearInventory['refrigeration'] : [];
-            $this->requireValue($validator, "{$basePath}.refrigeration.equipment", $refrigeration['equipment'] ?? null, 'Vui lòng chọn thiết bị lạnh sử dụng.');
-            $this->requireValue($validator, "{$basePath}.refrigeration.capacity", $refrigeration['capacity'] ?? null, 'Vui lòng nhập công suất lạnh.');
-            $this->requireValue($validator, "{$basePath}.refrigeration.gas_type", $refrigeration['gas_type'] ?? null, 'Vui lòng chọn loại môi chất lạnh.');
-            $this->requireValue($validator, "{$basePath}.refrigeration.full_charge_kg", $refrigeration['full_charge_kg'] ?? null, 'Vui lòng nhập lượng gas khi nạp đầy.');
+            $refrigerationSystems = is_array($yearInventory['refrigeration_systems'] ?? null)
+                ? $yearInventory['refrigeration_systems']
+                : [];
 
-            if (($refrigeration['equipment'] ?? null) === 'Khác') {
-                $this->requireValue($validator, "{$basePath}.refrigeration.equipment_other", $refrigeration['equipment_other'] ?? null, 'Vui lòng nêu rõ thiết bị lạnh khác.');
+            if ($refrigerationSystems === []) {
+                $validator->errors()->add("{$basePath}.refrigeration_systems", 'Vui lòng khai báo ít nhất một hệ thống lạnh.');
             }
 
-            if (($refrigeration['gas_type'] ?? null) === 'Khác') {
-                $this->requireValue($validator, "{$basePath}.refrigeration.gas_type_other", $refrigeration['gas_type_other'] ?? null, 'Vui lòng nêu rõ môi chất lạnh khác.');
+            foreach ($refrigerationSystems as $index => $refrigeration) {
+                if (! is_array($refrigeration)) {
+                    continue;
+                }
+
+                $refrigerationPath = "{$basePath}.refrigeration_systems.{$index}";
+                $this->requireValue($validator, "{$refrigerationPath}.equipment", $refrigeration['equipment'] ?? null, 'Vui lòng chọn thiết bị lạnh sử dụng.');
+                $this->requireValue($validator, "{$refrigerationPath}.capacity", $refrigeration['capacity'] ?? null, 'Vui lòng nhập công suất lạnh.');
+                $this->requireValue($validator, "{$refrigerationPath}.gas_type", $refrigeration['gas_type'] ?? null, 'Vui lòng chọn loại môi chất lạnh.');
+                $this->requireValue($validator, "{$refrigerationPath}.full_charge_kg", $refrigeration['full_charge_kg'] ?? null, 'Vui lòng nhập lượng gas khi nạp đầy.');
+
+                if (($refrigeration['equipment'] ?? null) === 'Khác') {
+                    $this->requireValue($validator, "{$refrigerationPath}.equipment_other", $refrigeration['equipment_other'] ?? null, 'Vui lòng nêu rõ thiết bị lạnh khác.');
+                }
+
+                if (($refrigeration['gas_type'] ?? null) === 'Khác') {
+                    $this->requireValue($validator, "{$refrigerationPath}.gas_type_other", $refrigeration['gas_type_other'] ?? null, 'Vui lòng nêu rõ môi chất lạnh khác.');
+                }
             }
         }
     }

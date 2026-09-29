@@ -100,23 +100,9 @@ function ghgApp() {
               2024: {
                 has_scope1: true,
                 has_boiler: false,
-                boiler: {
-                  capacity: "",
-                  fuel: "Sinh khối",
-                  fuel_other: "",
-                  consumption: null,
-                  unit: "tấn/năm",
-                },
+                boilers: [],
                 has_cooling: false,
-                refrigeration: {
-                  equipment: "Máy lạnh",
-                  equipment_other: "",
-                  capacity: "2 HP",
-                  gas_type: "R22",
-                  gas_type_other: "",
-                  full_charge_kg: null,
-                  recharge_kg: null,
-                },
+                refrigeration_systems: [],
                 scope1_sources: [],
                 grid_electricity_kwh: null,
                 solar_electricity_kwh: null,
@@ -129,23 +115,9 @@ function ghgApp() {
               2025: {
                 has_scope1: true,
                 has_boiler: false,
-                boiler: {
-                  capacity: "",
-                  fuel: "Sinh khối",
-                  fuel_other: "",
-                  consumption: null,
-                  unit: "tấn/năm",
-                },
+                boilers: [],
                 has_cooling: false,
-                refrigeration: {
-                  equipment: "Máy lạnh",
-                  equipment_other: "",
-                  capacity: "2 HP",
-                  gas_type: "R22",
-                  gas_type_other: "",
-                  full_charge_kg: null,
-                  recharge_kg: null,
-                },
+                refrigeration_systems: [],
                 scope1_sources: [],
                 grid_electricity_kwh: null,
                 solar_electricity_kwh: null,
@@ -158,23 +130,9 @@ function ghgApp() {
               2026: {
                 has_scope1: true,
                 has_boiler: false,
-                boiler: {
-                  capacity: "",
-                  fuel: "Sinh khối",
-                  fuel_other: "",
-                  consumption: null,
-                  unit: "tấn/năm",
-                },
+                boilers: [],
                 has_cooling: false,
-                refrigeration: {
-                  equipment: "Máy lạnh",
-                  equipment_other: "",
-                  capacity: "2 HP",
-                  gas_type: "R22",
-                  gas_type_other: "",
-                  full_charge_kg: null,
-                  recharge_kg: null,
-                },
+                refrigeration_systems: [],
                 scope1_sources: [],
                 grid_electricity_kwh: null,
                 solar_electricity_kwh: null,
@@ -404,6 +362,36 @@ function ghgApp() {
           },
 
           normalizeDraftFormData(draftFormData) {
+            const draftInventory = draftFormData?.inventory;
+
+            if (draftInventory && typeof draftInventory === "object") {
+              for (const year of ["2024", "2025", "2026"]) {
+                const yearInventory = draftInventory[year];
+
+                if (!yearInventory || typeof yearInventory !== "object") {
+                  continue;
+                }
+
+                if (
+                  !Array.isArray(yearInventory.boilers) &&
+                  yearInventory.boiler &&
+                  typeof yearInventory.boiler === "object"
+                ) {
+                  yearInventory.boilers = [yearInventory.boiler];
+                }
+
+                if (
+                  !Array.isArray(yearInventory.refrigeration_systems) &&
+                  yearInventory.refrigeration &&
+                  typeof yearInventory.refrigeration === "object"
+                ) {
+                  yearInventory.refrigeration_systems = [
+                    yearInventory.refrigeration,
+                  ];
+                }
+              }
+            }
+
             const normalized = this.mergeKnownDraftShape(
               this.formData,
               draftFormData,
@@ -429,6 +417,8 @@ function ghgApp() {
               unit_other: "",
               note: "",
             };
+            const boilerDefaults = this.newBoiler();
+            const refrigerationDefaults = this.newRefrigerationSystem();
 
             for (const year of allowedYears) {
               normalized.inventory[year].has_scope1 = true;
@@ -442,6 +432,56 @@ function ghgApp() {
                       this.mergeKnownDraftShape(sourceDefaults, source),
                     )
                 : [];
+
+              const boilers = normalized.inventory[year].boilers;
+              normalized.inventory[year].boilers = Array.isArray(boilers)
+                ? boilers
+                    .filter(
+                      (boiler) => boiler !== null && typeof boiler === "object",
+                    )
+                    .map((boiler) =>
+                      this.mergeKnownDraftShape(
+                        { ...boilerDefaults, id: this.newEquipmentId("boiler") },
+                        boiler,
+                      ),
+                    )
+                : [];
+
+              const refrigerationSystems =
+                normalized.inventory[year].refrigeration_systems;
+              normalized.inventory[year].refrigeration_systems = Array.isArray(
+                refrigerationSystems,
+              )
+                ? refrigerationSystems
+                    .filter(
+                      (system) => system !== null && typeof system === "object",
+                    )
+                    .map((system) =>
+                      this.mergeKnownDraftShape(
+                        {
+                          ...refrigerationDefaults,
+                          id: this.newEquipmentId("cooling"),
+                        },
+                        system,
+                      ),
+                    )
+                : [];
+
+              if (
+                normalized.inventory[year].has_boiler &&
+                normalized.inventory[year].boilers.length === 0
+              ) {
+                normalized.inventory[year].boilers.push(this.newBoiler());
+              }
+
+              if (
+                normalized.inventory[year].has_cooling &&
+                normalized.inventory[year].refrigeration_systems.length === 0
+              ) {
+                normalized.inventory[year].refrigeration_systems.push(
+                  this.newRefrigerationSystem(),
+                );
+              }
             }
 
             return normalized;
@@ -476,6 +516,109 @@ function ghgApp() {
               unit_other: "",
               note: "",
             };
+          },
+
+          newEquipmentId(prefix) {
+            return (
+              prefix +
+              "_" +
+              Date.now() +
+              "_" +
+              Math.random().toString(36).slice(2, 6)
+            );
+          },
+
+          newBoiler() {
+            return {
+              id: this.newEquipmentId("boiler"),
+              capacity: "",
+              fuel: "Sinh khối",
+              fuel_other: "",
+              consumption: null,
+              unit: "tấn/năm",
+            };
+          },
+
+          newRefrigerationSystem() {
+            return {
+              id: this.newEquipmentId("cooling"),
+              equipment: "Máy lạnh",
+              equipment_other: "",
+              capacity: "",
+              gas_type: "R22",
+              gas_type_other: "",
+              full_charge_kg: null,
+              recharge_kg: null,
+            };
+          },
+
+          toggleBoilers(year, enabled = null) {
+            const inventory = this.formData.inventory[year];
+            inventory.has_boiler =
+              typeof enabled === "boolean" ? enabled : inventory.has_boiler;
+
+            if (inventory.has_boiler && inventory.boilers.length === 0) {
+              inventory.boilers.push(this.newBoiler());
+            }
+
+            if (!inventory.has_boiler) {
+              this.clearErrorsByPrefix("inventory." + year + ".boilers");
+            }
+          },
+
+          addBoiler(year) {
+            this.formData.inventory[year].boilers.push(this.newBoiler());
+            this.$nextTick(() => window.lucide?.createIcons());
+          },
+
+          removeBoiler(year, index) {
+            const inventory = this.formData.inventory[year];
+            inventory.boilers.splice(index, 1);
+            this.clearErrorsByPrefix("inventory." + year + ".boilers");
+
+            if (inventory.boilers.length === 0) {
+              inventory.has_boiler = false;
+            }
+          },
+
+          toggleRefrigerationSystems(year, enabled = null) {
+            const inventory = this.formData.inventory[year];
+            inventory.has_cooling =
+              typeof enabled === "boolean" ? enabled : inventory.has_cooling;
+
+            if (
+              inventory.has_cooling &&
+              inventory.refrigeration_systems.length === 0
+            ) {
+              inventory.refrigeration_systems.push(
+                this.newRefrigerationSystem(),
+              );
+            }
+
+            if (!inventory.has_cooling) {
+              this.clearErrorsByPrefix(
+                "inventory." + year + ".refrigeration_systems",
+              );
+            }
+          },
+
+          addRefrigerationSystem(year) {
+            this.formData.inventory[year].refrigeration_systems.push(
+              this.newRefrigerationSystem(),
+            );
+            this.$nextTick(() => window.lucide?.createIcons());
+          },
+
+          removeRefrigerationSystem(year, index) {
+            const inventory = this.formData.inventory[year];
+            inventory.refrigeration_systems.splice(index, 1);
+            this.clearErrorsByPrefix(
+              "inventory." + year + ".refrigeration_systems",
+            );
+
+            if (inventory.refrigeration_systems.length === 0) {
+              inventory.has_cooling = false;
+            }
           },
 
           reportingOptionForYears(years) {
@@ -537,23 +680,9 @@ function ghgApp() {
               this.formData.inventory[yr] = {
                 has_scope1: true,
                 has_boiler: false,
-                boiler: {
-                  capacity: "",
-                  fuel: "Sinh khối",
-                  fuel_other: "",
-                  consumption: null,
-                  unit: "tấn/năm",
-                },
+                boilers: [],
                 has_cooling: false,
-                refrigeration: {
-                  equipment: "Máy lạnh",
-                  equipment_other: "",
-                  capacity: "2 HP",
-                  gas_type: "R22",
-                  gas_type_other: "",
-                  full_charge_kg: null,
-                  recharge_kg: null,
-                },
+                refrigeration_systems: [],
                 scope1_sources: [this.newScope1Source()],
                 grid_electricity_kwh: null,
                 solar_electricity_kwh: null,
@@ -628,7 +757,7 @@ function ghgApp() {
             this.formData.company.email = "info@takigawa.vn";
             this.formData.company.legal_representative.name =
               "Ông Takigawa Hiroshi";
-            this.formData.company.legal_representative.phone = "02743841777";
+            this.formData.company.legal_representative.phone = "0901000000";
             this.formData.company.technical_contact.name = "Chị Nguyệt Sương";
             this.formData.company.technical_contact.phone = "0903841777";
 
@@ -638,15 +767,17 @@ function ghgApp() {
             const y24 = this.formData.inventory["2024"];
             y24.has_scope1 = true;
             y24.has_boiler = true;
-            y24.boiler = {
+            y24.boilers = [{
+              id: this.newEquipmentId("boiler"),
               capacity: "3 tấn hơi/giờ",
               fuel: "Sinh khối",
               fuel_other: "",
               consumption: 500,
               unit: "tấn/năm",
-            };
+            }];
             y24.has_cooling = true;
-            y24.refrigeration = {
+            y24.refrigeration_systems = [{
+              id: this.newEquipmentId("cooling"),
               equipment: "Máy lạnh",
               equipment_other: "",
               capacity: "2 HP",
@@ -654,7 +785,7 @@ function ghgApp() {
               gas_type_other: "",
               full_charge_kg: 10,
               recharge_kg: 2,
-            };
+            }];
             y24.scope1_sources = [
               {
                 id: "src_takigawa_1",
@@ -679,15 +810,17 @@ function ghgApp() {
             const y25 = this.formData.inventory["2025"];
             y25.has_scope1 = true;
             y25.has_boiler = true;
-            y25.boiler = {
+            y25.boilers = [{
+              id: this.newEquipmentId("boiler"),
               capacity: "3 tấn hơi/giờ",
               fuel: "Sinh khối",
               fuel_other: "",
               consumption: 500,
               unit: "tấn/năm",
-            };
+            }];
             y25.has_cooling = true;
-            y25.refrigeration = {
+            y25.refrigeration_systems = [{
+              id: this.newEquipmentId("cooling"),
               equipment: "Máy lạnh",
               equipment_other: "",
               capacity: "2 HP",
@@ -695,7 +828,7 @@ function ghgApp() {
               gas_type_other: "",
               full_charge_kg: 10,
               recharge_kg: 2,
-            };
+            }];
             y25.scope1_sources = [
               {
                 id: "src_takigawa_2",
@@ -720,15 +853,17 @@ function ghgApp() {
             const y26 = this.formData.inventory["2026"];
             y26.has_scope1 = true;
             y26.has_boiler = true;
-            y26.boiler = {
+            y26.boilers = [{
+              id: this.newEquipmentId("boiler"),
               capacity: "3 tấn hơi/giờ",
               fuel: "Sinh khối",
               fuel_other: "",
               consumption: 500,
               unit: "tấn/năm",
-            };
+            }];
             y26.has_cooling = true;
-            y26.refrigeration = {
+            y26.refrigeration_systems = [{
+              id: this.newEquipmentId("cooling"),
               equipment: "Máy lạnh",
               equipment_other: "",
               capacity: "2 HP",
@@ -736,7 +871,7 @@ function ghgApp() {
               gas_type_other: "",
               full_charge_kg: 10,
               recharge_kg: 2,
-            };
+            }];
             y26.scope1_sources = [
               {
                 id: "src_takigawa_3",
@@ -817,10 +952,23 @@ function ghgApp() {
 
           // Navigation & Stepper Rules
           canNavigateTo(stepNumber) {
-            return true;
+            return (
+              stepNumber === 1 ||
+              stepNumber === this.currentStep ||
+              this.completedSteps.includes(stepNumber) ||
+              this.completedSteps.includes(stepNumber - 1)
+            );
           },
 
           jumpToStep(stepNumber) {
+            if (
+              this.currentStep === 1 &&
+              stepNumber > 1 &&
+              !this.validateCurrentStep(1)
+            ) {
+              return;
+            }
+
             if (this.canNavigateTo(stepNumber)) {
               this.currentStep = stepNumber;
               window.scrollTo({ top: 0, behavior: this.scrollBehavior() });
@@ -885,6 +1033,17 @@ function ghgApp() {
             }
           },
 
+          isVietnameseMobilePhone(phone) {
+            if (typeof phone !== "string") return false;
+
+            const normalizedPhone = phone
+              .trim()
+              .replace(/[\s.-]/g, "")
+              .replace(/^\+84/, "0");
+
+            return /^0(?:3|5|7|8|9)\d{8}$/.test(normalizedPhone);
+          },
+
           validateField(fieldKey) {
             if (fieldKey === "company.name") {
               if (
@@ -946,6 +1105,17 @@ function ghgApp() {
               } else {
                 delete this.errors["company.legal_representative.name"];
               }
+            } else if (fieldKey === "company.legal_representative.phone") {
+              const phone = this.formData.company.legal_representative.phone;
+              if (!phone || !phone.trim()) {
+                this.errors["company.legal_representative.phone"] =
+                  "Vui lòng nhập số điện thoại Người đại diện.";
+              } else if (!this.isVietnameseMobilePhone(phone)) {
+                this.errors["company.legal_representative.phone"] =
+                  "Số điện thoại Người đại diện phải là số di động Việt Nam hợp lệ.";
+              } else {
+                delete this.errors["company.legal_representative.phone"];
+              }
             } else if (fieldKey === "company.technical_contact.name") {
               if (
                 !this.formData.company.technical_contact.name ||
@@ -963,6 +1133,13 @@ function ghgApp() {
               ) {
                 this.errors["company.technical_contact.phone"] =
                   "Vui lòng nhập số điện thoại cán bộ phụ trách số liệu.";
+              } else if (
+                !this.isVietnameseMobilePhone(
+                  this.formData.company.technical_contact.phone,
+                )
+              ) {
+                this.errors["company.technical_contact.phone"] =
+                  "Số điện thoại cán bộ phụ trách phải là số di động Việt Nam hợp lệ.";
               } else {
                 delete this.errors["company.technical_contact.phone"];
               }
@@ -1004,6 +1181,8 @@ function ghgApp() {
             else if (key === "company.email") elemId = "company_email";
             else if (key === "company.legal_representative.name")
               elemId = "legal_rep_name";
+            else if (key === "company.legal_representative.phone")
+              elemId = "legal_rep_phone";
             else if (key === "company.technical_contact.name")
               elemId = "technical_contact_name";
             else if (key === "company.technical_contact.phone")
@@ -1153,6 +1332,25 @@ function ghgApp() {
               }
 
               if (
+                !c.legal_representative.phone ||
+                !c.legal_representative.phone.trim()
+              ) {
+                markError(
+                  "company.legal_representative.phone",
+                  "Vui lòng nhập số điện thoại Người đại diện.",
+                  "legal_rep_phone",
+                );
+              } else if (
+                !this.isVietnameseMobilePhone(c.legal_representative.phone)
+              ) {
+                markError(
+                  "company.legal_representative.phone",
+                  "Số điện thoại Người đại diện phải là số di động Việt Nam hợp lệ.",
+                  "legal_rep_phone",
+                );
+              }
+
+              if (
                 !c.technical_contact.name ||
                 !c.technical_contact.name.trim()
               ) {
@@ -1170,6 +1368,14 @@ function ghgApp() {
                 markError(
                   "company.technical_contact.phone",
                   "Vui lòng nhập số điện thoại cán bộ phụ trách số liệu.",
+                  "technical_contact_phone",
+                );
+              } else if (
+                !this.isVietnameseMobilePhone(c.technical_contact.phone)
+              ) {
+                markError(
+                  "company.technical_contact.phone",
+                  "Số điện thoại cán bộ phụ trách phải là số di động Việt Nam hợp lệ.",
                   "technical_contact_phone",
                 );
               }
@@ -1193,78 +1399,107 @@ function ghgApp() {
               for (const yr of this.formData.reporting_years) {
                 const inv = this.formData.inventory[yr];
                 if (inv.has_boiler) {
-                    const boiler = inv.boiler;
+                  if (!inv.boilers || inv.boilers.length === 0) {
+                    markError(
+                      "inventory." + yr + ".boilers",
+                      "Vui lòng khai báo ít nhất một lò hơi cho năm " + yr + ".",
+                    );
+                  }
+
+                  for (let i = 0; i < inv.boilers.length; i++) {
+                    const boiler = inv.boilers[i];
+                    const boilerPath =
+                      "inventory." + yr + ".boilers." + i;
                     if (!boiler.capacity || !boiler.capacity.trim()) {
                       markError(
-                        "inventory." + yr + ".boiler.capacity",
-                        "Vui lòng nhập công suất thiết kế lò hơi cho năm " + yr + ".",
+                        boilerPath + ".capacity",
+                        "Vui lòng nhập công suất thiết kế lò hơi #" + (i + 1) + ".",
                       );
                     }
                     if (!boiler.fuel) {
                       markError(
-                        "inventory." + yr + ".boiler.fuel",
-                        "Vui lòng chọn nhiên liệu đốt lò hơi cho năm " + yr + ".",
+                        boilerPath + ".fuel",
+                        "Vui lòng chọn nhiên liệu đốt lò hơi #" + (i + 1) + ".",
                       );
                     }
                     if (boiler.fuel === "Khác" && (!boiler.fuel_other || !boiler.fuel_other.trim())) {
                       markError(
-                        "inventory." + yr + ".boiler.fuel_other",
-                        "Vui lòng nêu rõ nhiên liệu đốt lò hơi khác cho năm " + yr + ".",
+                        boilerPath + ".fuel_other",
+                        "Vui lòng nêu rõ nhiên liệu khác của lò hơi #" + (i + 1) + ".",
                       );
                     }
                     if (boiler.consumption === null || boiler.consumption === "" || isNaN(boiler.consumption) || Number(boiler.consumption) < 0) {
                       markError(
-                        "inventory." + yr + ".boiler.consumption",
-                        "Lượng đốt lò hơi năm " + yr + " phải là số lớn hơn hoặc bằng 0.",
+                        boilerPath + ".consumption",
+                        "Lượng đốt lò hơi #" + (i + 1) + " phải là số lớn hơn hoặc bằng 0.",
                       );
                     }
                     if (!boiler.unit) {
                       markError(
-                        "inventory." + yr + ".boiler.unit",
-                        "Vui lòng chọn đơn vị lượng đốt lò hơi cho năm " + yr + ".",
+                        boilerPath + ".unit",
+                        "Vui lòng chọn đơn vị lượng đốt lò hơi #" + (i + 1) + ".",
                       );
                     }
                   }
+                }
 
-                  if (inv.has_cooling) {
-                    const refrigeration = inv.refrigeration;
+                if (inv.has_cooling) {
+                  if (
+                    !inv.refrigeration_systems ||
+                    inv.refrigeration_systems.length === 0
+                  ) {
+                    markError(
+                      "inventory." + yr + ".refrigeration_systems",
+                      "Vui lòng khai báo ít nhất một hệ thống lạnh cho năm " + yr + ".",
+                    );
+                  }
+
+                  for (
+                    let i = 0;
+                    i < inv.refrigeration_systems.length;
+                    i++
+                  ) {
+                    const refrigeration = inv.refrigeration_systems[i];
+                    const refrigerationPath =
+                      "inventory." + yr + ".refrigeration_systems." + i;
                     if (!refrigeration.equipment) {
                       markError(
-                        "inventory." + yr + ".refrigeration.equipment",
-                        "Vui lòng chọn thiết bị lạnh sử dụng cho năm " + yr + ".",
+                        refrigerationPath + ".equipment",
+                        "Vui lòng chọn thiết bị lạnh #" + (i + 1) + ".",
                       );
                     }
                     if (refrigeration.equipment === "Khác" && (!refrigeration.equipment_other || !refrigeration.equipment_other.trim())) {
                       markError(
-                        "inventory." + yr + ".refrigeration.equipment_other",
-                        "Vui lòng nêu rõ thiết bị lạnh khác cho năm " + yr + ".",
+                        refrigerationPath + ".equipment_other",
+                        "Vui lòng nêu rõ thiết bị lạnh khác ở hệ thống #" + (i + 1) + ".",
                       );
                     }
                     if (!refrigeration.capacity || !refrigeration.capacity.trim()) {
                       markError(
-                        "inventory." + yr + ".refrigeration.capacity",
-                        "Vui lòng nhập công suất lạnh cho năm " + yr + ".",
+                        refrigerationPath + ".capacity",
+                        "Vui lòng nhập công suất lạnh của hệ thống #" + (i + 1) + ".",
                       );
                     }
                     if (!refrigeration.gas_type) {
                       markError(
-                        "inventory." + yr + ".refrigeration.gas_type",
-                        "Vui lòng chọn môi chất lạnh cho năm " + yr + ".",
+                        refrigerationPath + ".gas_type",
+                        "Vui lòng chọn môi chất lạnh của hệ thống #" + (i + 1) + ".",
                       );
                     }
                     if (refrigeration.gas_type === "Khác" && (!refrigeration.gas_type_other || !refrigeration.gas_type_other.trim())) {
                       markError(
-                        "inventory." + yr + ".refrigeration.gas_type_other",
-                        "Vui lòng nêu rõ môi chất lạnh khác cho năm " + yr + ".",
+                        refrigerationPath + ".gas_type_other",
+                        "Vui lòng nêu rõ môi chất lạnh khác ở hệ thống #" + (i + 1) + ".",
                       );
                     }
                     if (refrigeration.full_charge_kg === null || refrigeration.full_charge_kg === "" || isNaN(refrigeration.full_charge_kg) || Number(refrigeration.full_charge_kg) < 0) {
                       markError(
-                        "inventory." + yr + ".refrigeration.full_charge_kg",
-                        "Lượng gas nạp đầy năm " + yr + " phải là số lớn hơn hoặc bằng 0.",
+                        refrigerationPath + ".full_charge_kg",
+                        "Lượng gas nạp đầy của hệ thống #" + (i + 1) + " phải là số lớn hơn hoặc bằng 0.",
                       );
                     }
                   }
+                }
 
                   if (!inv.scope1_sources || inv.scope1_sources.length === 0) {
                     markError(

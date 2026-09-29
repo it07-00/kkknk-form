@@ -198,11 +198,11 @@
                           </template>
                         </div>
 
-                        <!-- Tổng mức tiêu thụ năng lượng quy đổi (TOE/năm) - Khớp cột R file Excel -->
+                        <!-- Tổng mức tiêu thụ năng lượng quy đổi (TOE/năm) -->
                         <div
                           class="sm:col-span-2 pt-4 border-t border-borderui"
                         >
-                          <div class="flex items-center justify-between mb-1.5">
+                          <div class="mb-1.5">
                             <label
                               :for="'energy_toe_' + yr"
                               class="block text-sm font-medium text-txprimary"
@@ -210,10 +210,6 @@
                               Tổng mức tiêu thụ năng lượng quy đổi trong năm
                               (TOE/năm)
                             </label>
-                            <span
-                              class="text-xs font-semibold px-2 py-0.5 rounded-md bg-[#003c33]/10 text-[#003c33]"
-                              >Cột TOE trong file Excel</span
-                            >
                           </div>
                           <div class="relative">
                             <input

@@ -32,6 +32,13 @@ class GhgSubmissionExcelExportTest extends TestCase
         $this->assertSame('Năm 2024', $inventoryValues['C6']);
         $this->assertSame('3701858627', $inventoryValues['F6']);
         $this->assertSame('3000000', $inventoryValues['I6']);
+        $this->assertSame('3 tấn hơi/giờ; 5 tấn hơi/giờ', $inventoryValues['K6']);
+        $this->assertSame('Sinh khối; Dầu DO', $inventoryValues['L6']);
+        $this->assertSame('500 tấn/năm; 700 lít/năm', $inventoryValues['M6']);
+        $this->assertSame('Máy lạnh; Chiller', $inventoryValues['N6']);
+        $this->assertSame('2 HP; 50 HP', $inventoryValues['O6']);
+        $this->assertSame('R22; R134a', $inventoryValues['P6']);
+        $this->assertSame('10; 20', $inventoryValues['Q6']);
         $this->assertSame('2000', $inventoryValues['U6']);
         $this->assertSame('3200', $inventoryValues['W6']);
         $this->assertSame('Năm 2025', $inventoryValues['C7']);
@@ -101,7 +108,7 @@ class GhgSubmissionExcelExportTest extends TestCase
                     'address' => 'Số 10, đường số 14, khu công nghiệp VSIP II-A, TP.HCM',
                     'industry' => 'Sản xuất, in ấn, thiết kế bao bì',
                     'email' => 'info@takigawa.vn',
-                    'legal_representative' => ['name' => 'Takigawa Hiroshi', 'phone' => '02743841777'],
+                    'legal_representative' => ['name' => 'Takigawa Hiroshi', 'phone' => '0901000000'],
                     'technical_contact' => ['name' => 'Chị Nguyệt Sương', 'phone' => '0903841777'],
                 ],
                 'reporting_years' => ['2024', '2025'],
@@ -134,22 +141,46 @@ class GhgSubmissionExcelExportTest extends TestCase
         return [
             'has_scope1' => true,
             'has_boiler' => true,
-            'boiler' => [
-                'capacity' => '3 tấn hơi/giờ',
-                'fuel' => 'Sinh khối',
-                'fuel_other' => '',
-                'consumption' => 500,
-                'unit' => 'tấn/năm',
+            'boilers' => [
+                [
+                    'id' => 'boiler-1',
+                    'capacity' => '3 tấn hơi/giờ',
+                    'fuel' => 'Sinh khối',
+                    'fuel_other' => '',
+                    'consumption' => 500,
+                    'unit' => 'tấn/năm',
+                ],
+                [
+                    'id' => 'boiler-2',
+                    'capacity' => '5 tấn hơi/giờ',
+                    'fuel' => 'Dầu DO',
+                    'fuel_other' => '',
+                    'consumption' => 700,
+                    'unit' => 'lít/năm',
+                ],
             ],
             'has_cooling' => true,
-            'refrigeration' => [
-                'equipment' => 'Máy lạnh',
-                'equipment_other' => '',
-                'capacity' => '2 HP',
-                'gas_type' => 'R22',
-                'gas_type_other' => '',
-                'full_charge_kg' => 10,
-                'recharge_kg' => 2,
+            'refrigeration_systems' => [
+                [
+                    'id' => 'cooling-1',
+                    'equipment' => 'Máy lạnh',
+                    'equipment_other' => '',
+                    'capacity' => '2 HP',
+                    'gas_type' => 'R22',
+                    'gas_type_other' => '',
+                    'full_charge_kg' => 10,
+                    'recharge_kg' => 2,
+                ],
+                [
+                    'id' => 'cooling-2',
+                    'equipment' => 'Chiller',
+                    'equipment_other' => '',
+                    'capacity' => '50 HP',
+                    'gas_type' => 'R134a',
+                    'gas_type_other' => '',
+                    'full_charge_kg' => 20,
+                    'recharge_kg' => 3,
+                ],
             ],
             'scope1_sources' => [[
                 'id' => 'source-1',

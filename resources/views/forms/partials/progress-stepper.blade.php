@@ -29,13 +29,17 @@
                 <button
                   @click="jumpToStep(st.number)"
                   type="button"
+                  :disabled="!canNavigateTo(st.number)"
                   :aria-current="currentStep === st.number ? 'step' : null"
+                  :aria-disabled="!canNavigateTo(st.number)"
+                  :title="canNavigateTo(st.number) ? null : 'Vui lòng hoàn thành bước trước để tiếp tục'"
                   :class="{
                         'bg-[#003c33] text-white shadow-pine': currentStep === st.number,
                         'bg-[#F0F6F3] text-[#003c33] hover:bg-[#E4EFEA] border border-[#003c33]/15': completedSteps.includes(st.number) && currentStep !== st.number,
-                        'text-txprimary hover:bg-[#F8FAF9] hover:text-[#003c33]': !completedSteps.includes(st.number) && currentStep !== st.number
+                        'text-txprimary hover:bg-[#F8FAF9] hover:text-[#003c33] cursor-pointer': canNavigateTo(st.number) && !completedSteps.includes(st.number) && currentStep !== st.number,
+                        'text-txsecondary opacity-50 cursor-not-allowed': !canNavigateTo(st.number)
                       }"
-                  class="w-full text-left flex items-center space-x-3 text-sm transition-all rounded-2xl p-2.5 group relative cursor-pointer"
+                  class="w-full text-left flex items-center space-x-3 text-sm transition-all rounded-2xl p-2.5 group relative"
                 >
                   <!-- Status icon circle -->
                   <div
@@ -43,7 +47,8 @@
                     :class="{
                        'bg-[#003c33] text-[#9fe870] shadow-sm': completedSteps.includes(st.number) && currentStep !== st.number,
                        'bg-[#9fe870] text-[#003c33] shadow-glow font-mono': currentStep === st.number,
-                       'bg-slate-100 text-txsecondary border border-borderui group-hover:border-[#003c33]/40 group-hover:text-[#003c33] group-hover:bg-white': !completedSteps.includes(st.number) && currentStep !== st.number
+                       'bg-slate-100 text-txsecondary border border-borderui group-hover:border-[#003c33]/40 group-hover:text-[#003c33] group-hover:bg-white': canNavigateTo(st.number) && !completedSteps.includes(st.number) && currentStep !== st.number,
+                       'bg-slate-50 text-slate-400 border border-slate-200': !canNavigateTo(st.number)
                      }"
                   >
                     <template
@@ -62,7 +67,7 @@
                   <div class="flex-1 min-w-0">
                     <div
                       class="truncate text-sm font-semibold"
-                      :class="currentStep === st.number ? 'text-white font-bold' : (completedSteps.includes(st.number) ? 'text-[#003c33] font-bold' : 'text-txprimary font-semibold group-hover:text-[#003c33]')"
+                      :class="currentStep === st.number ? 'text-white font-bold' : (completedSteps.includes(st.number) ? 'text-[#003c33] font-bold' : (canNavigateTo(st.number) ? 'text-txprimary font-semibold group-hover:text-[#003c33]' : 'text-slate-500 font-semibold'))"
                       x-text="st.title"
                     ></div>
                     <div

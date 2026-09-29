@@ -7,6 +7,8 @@
     <title>
       @yield('title', 'Bảng Cung Cấp Số Liệu Kiểm Kê Khí Nhà Kính và Kế Hoạch Giảm Nhẹ - Sở Công Thương TP.HCM')
     </title>
+    <link rel="icon" type="image/png" href="{{ asset('images/logo-so-cong-thuong.png') }}" />
+    <link rel="shortcut icon" href="{{ asset('favicon.ico') }}" />
 
     <!-- Google Fonts: Be Vietnam Pro & Inter -->
     <link rel="preconnect" href="https://fonts.googleapis.com" />
@@ -123,7 +125,7 @@
       }
 
       html {
-        scroll-padding-top: 7rem;
+        scroll-padding-top: 8.5rem;
       }
 
       button:focus-visible,
@@ -202,7 +204,7 @@
     @include('forms.partials.toast')
 
     <!-- APPLICATION LOGIC JS -->
-    <script src="{{ asset('js/ghg-app.js') }}"></script>
+    <script src="{{ asset('js/ghg-app.js') }}?v={{ filemtime(public_path('js/ghg-app.js')) }}"></script>
     <script>
       // Initialize icons on DOM ready
       document.addEventListener("DOMContentLoaded", function () {
