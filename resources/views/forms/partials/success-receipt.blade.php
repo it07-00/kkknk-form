@@ -101,15 +101,6 @@
               In / Tải bản xác nhận PDF
             </button>
             <a
-              x-show="submittedDataReceipt.excel_url"
-              :href="submittedDataReceipt.excel_url"
-              class="w-full sm:w-auto inline-flex items-center justify-center px-5 py-2.5 rounded-xl bg-[#003c33] text-white hover:bg-[#064e43] font-semibold text-sm transition-colors shadow-subtle"
-              aria-label="Tải báo cáo kiểm kê khí nhà kính định dạng Excel"
-            >
-              <i data-lucide="file-spreadsheet" class="w-4 h-4 mr-2 text-[#9fe870]" aria-hidden="true"></i>
-              Tải báo cáo Excel
-            </a>
-            <a
               x-show="submittedDataReceipt.report_file_url"
               :href="submittedDataReceipt.report_file_url"
               class="w-full sm:w-auto inline-flex items-center justify-center px-5 py-2.5 rounded-xl border border-[#003c33] bg-white text-[#003c33] hover:bg-[#F0F6F3] font-semibold text-sm transition-colors shadow-subtle"

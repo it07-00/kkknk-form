@@ -17,8 +17,8 @@ return Application::configure(basePath: dirname(__DIR__))
         $middleware->alias([
             'admin' => EnsureUserIsAdmin::class,
         ]);
-        $middleware->redirectGuestsTo(fn (Request $request): string => route('admin.login'));
-        $middleware->redirectUsersTo(fn (Request $request): string => route('admin.submissions.index'));
+        $middleware->redirectGuestsTo(fn (Request $request): string => route('filament.admin.auth.login'));
+        $middleware->redirectUsersTo(fn (Request $request): string => route('filament.admin.resources.ghg-submissions.index'));
     })
     ->withExceptions(function (Exceptions $exceptions): void {
         $exceptions->shouldRenderJsonWhen(

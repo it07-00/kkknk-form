@@ -61,7 +61,6 @@ function ghgApp() {
           submittedDataReceipt: {
             code: "",
             time: "",
-            excel_url: "",
             report_file_url: "",
             report_file_name: "",
           },
@@ -233,15 +232,19 @@ function ghgApp() {
               { deep: true },
             );
 
-            // Re-render Lucide icons on any step change or dynamic render
+            // Re-render Lucide icons safely only if untransformed [data-lucide] tags exist
             this.$watch("currentStep", () => {
               this.$nextTick(() => {
-                if (window.lucide) lucide.createIcons();
+                if (window.lucide && document.querySelector("[data-lucide]:not(svg)")) {
+                  lucide.createIcons();
+                }
               });
             });
 
             this.$nextTick(() => {
-              if (window.lucide) lucide.createIcons();
+              if (window.lucide && document.querySelector("[data-lucide]:not(svg)")) {
+                lucide.createIcons();
+              }
             });
           },
 

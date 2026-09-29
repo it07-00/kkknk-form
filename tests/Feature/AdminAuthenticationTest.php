@@ -12,79 +12,26 @@ class AdminAuthenticationTest extends TestCase
 
     public function test_guest_is_redirected_to_admin_login(): void
     {
-        $this->get('/admin/submissions')
+        $this->get(route('filament.admin.resources.ghg-submissions.index'))
             ->assertRedirect('/admin/login');
     }
 
-    public function test_admin_can_log_in_and_log_out(): void
+    public function test_admin_can_access_filament_panel(): void
     {
-        $admin = User::factory()->admin()->create([
-            'email' => 'admin@example.com',
-            'password' => 'MatKhauAnToan123!',
-        ]);
+        $admin = User::factory()->admin()->create();
 
-        $this->post('/admin/login', [
-            'email' => $admin->email,
-            'password' => 'MatKhauAnToan123!',
-        ])->assertRedirect('/admin/submissions');
-
-        $this->assertAuthenticatedAs($admin);
-
-        $this->post('/admin/logout')
-            ->assertRedirect('/admin/login');
-
-        $this->assertGuest();
+        $this->actingAs($admin)
+            ->get(route('filament.admin.resources.ghg-submissions.index'))
+            ->assertOk();
     }
 
-    public function test_non_admin_account_cannot_log_in_to_admin_area(): void
-    {
-        $user = User::factory()->create([
-            'email' => 'user@example.com',
-            'password' => 'MatKhauAnToan123!',
-        ]);
-
-        $this->from('/admin/login')->post('/admin/login', [
-            'email' => $user->email,
-            'password' => 'MatKhauAnToan123!',
-        ])->assertRedirect('/admin/login')
-            ->assertInvalid([
-                'email' => 'Thông tin đăng nhập quản trị không chính xác.',
-            ]);
-
-        $this->assertGuest();
-    }
-
-    public function test_authenticated_non_admin_receives_403_for_admin_pages(): void
+    public function test_authenticated_non_admin_receives_403_for_filament_panel(): void
     {
         $user = User::factory()->create();
 
         $this->actingAs($user)
-            ->get('/admin/submissions')
+            ->get(route('filament.admin.resources.ghg-submissions.index'))
             ->assertForbidden();
-    }
-
-    public function test_admin_login_is_locked_after_repeated_failures(): void
-    {
-        User::factory()->admin()->create([
-            'email' => 'locked-admin@example.com',
-            'password' => 'MatKhauAnToan123!',
-        ]);
-
-        for ($attempt = 0; $attempt < 5; $attempt++) {
-            $this->post('/admin/login', [
-                'email' => 'locked-admin@example.com',
-                'password' => 'sai-mat-khau',
-            ])->assertInvalid(['email']);
-        }
-
-        $this->post('/admin/login', [
-            'email' => 'locked-admin@example.com',
-            'password' => 'MatKhauAnToan123!',
-        ])->assertInvalid([
-            'email' => 'Bạn đã đăng nhập sai quá nhiều lần.',
-        ]);
-
-        $this->assertGuest();
     }
 
     public function test_admin_create_command_creates_an_admin_with_a_hashed_password(): void

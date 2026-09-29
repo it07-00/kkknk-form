@@ -25,6 +25,7 @@ class GhgReportTest extends TestCase
         $response->assertDontSee('Dữ liệu mẫu từ Sở Công Thương');
         $response->assertDontSee('Nạp số liệu mẫu tự động');
         $response->assertDontSee('Mẫu Excel');
+        $response->assertDontSee('Tải báo cáo Excel');
         $response->assertDontSee('theo mẫu biểu Excel');
         $response->assertDontSee('Cơ chế phân tách Tab thông minh');
         $response->assertDontSee('Dữ liệu cần chuẩn bị trước khi kê khai');
@@ -42,7 +43,9 @@ class GhgReportTest extends TestCase
         $response->assertCreated()
             ->assertJsonPath('success', true)
             ->assertJsonPath('receipt.tax_id', '0312345678')
-            ->assertJsonStructure(['receipt' => ['code', 'time', 'company', 'tax_id', 'excel_url']]);
+            ->assertJsonStructure(['receipt' => ['code', 'time', 'company', 'tax_id']]);
+
+        $this->assertArrayNotHasKey('excel_url', $response->json('receipt'));
 
         $this->assertDatabaseHas('ghg_submissions', [
             'company_name' => 'Công ty TNHH Thử Nghiệm Xanh',

@@ -58,30 +58,30 @@
             <div
               class="flex items-center space-x-1.5 text-xs bg-white/[0.08] hover:bg-white/[0.12] transition-colors px-3 py-1 rounded-full border border-white/15 whitespace-nowrap flex-shrink-0 shadow-2xs"
             >
-              <template x-if="saveState === 'saving'">
-                <div class="flex items-center space-x-1.5 text-sky-200">
-                  <i data-lucide="refresh-cw" class="w-3 h-3 animate-spin"></i>
-                  <span class="text-xs">Đang lưu...</span>
-                </div>
-              </template>
-              <template x-if="saveState === 'saved'">
-                <div class="flex items-center space-x-1.5 text-[#9fe870]">
-                  <i
-                    data-lucide="check-circle-2"
-                    class="w-3.5 h-3.5 text-[#9fe870] flex-shrink-0"
-                  ></i>
-                  <span class="font-mono text-xs font-semibold">
-                    <span class="hidden sm:inline">Đã lưu: </span
-                    ><span x-text="lastSavedTime"></span>
-                  </span>
-                </div>
-              </template>
-              <template x-if="saveState === 'idle'">
-                <div class="flex items-center space-x-1.5 text-white/70">
-                  <i data-lucide="cloud" class="w-3 h-3 flex-shrink-0"></i>
-                  <span class="text-xs">Tự động lưu nháp</span>
-                </div>
-              </template>
+              <div x-show="saveState === 'saving'" class="flex items-center space-x-1.5 text-sky-200">
+                <svg class="w-3 h-3 animate-spin" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+                  <path d="M21 12a9 9 0 0 0-9-9 9.75 9.75 0 0 0-6.74 2.74L3 8"></path>
+                  <path d="M3 3v5h5"></path>
+                  <path d="M3 12a9 9 0 0 0 9 9 9.75 9.75 0 0 0 6.74-2.74L21 16"></path>
+                  <path d="M16 16h5v5"></path>
+                </svg>
+                <span class="text-xs">Đang lưu...</span>
+              </div>
+              <div x-show="saveState === 'saved'" class="flex items-center space-x-1.5 text-[#9fe870]">
+                <svg class="w-3.5 h-3.5 text-[#9fe870] flex-shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+                  <path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"></path>
+                  <polyline points="22 4 12 14.01 9 11.01"></polyline>
+                </svg>
+                <span class="font-mono text-xs font-semibold">
+                  <span class="hidden sm:inline">Đã lưu: </span><span x-text="lastSavedTime"></span>
+                </span>
+              </div>
+              <div x-show="saveState === 'idle'" class="flex items-center space-x-1.5 text-white/70">
+                <svg class="w-3 h-3 flex-shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                  <path d="M17.5 19H9a7 7 0 1 1 6.71-9h1.79a4.5 4.5 0 1 1 0 9Z"></path>
+                </svg>
+                <span class="text-xs">Tự động lưu nháp</span>
+              </div>
             </div>
           </div>
         </div>

@@ -4,14 +4,12 @@ namespace App\Http\Controllers;
 
 use App\Http\Requests\StoreGhgSubmissionRequest;
 use App\Models\GhgSubmission;
-use App\Services\GhgSubmissionExcelExporter;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Facades\URL;
 use Illuminate\Support\Str;
 use Illuminate\View\View;
-use Symfony\Component\HttpFoundation\BinaryFileResponse;
 use Symfony\Component\HttpFoundation\StreamedResponse;
 use Throwable;
 
@@ -67,11 +65,6 @@ class GhgReportController extends Controller
             throw $exception;
         }
 
-        $excelUrl = URL::temporarySignedRoute(
-            'submissions.excel',
-            now()->addDay(),
-            ['submission' => $submission->code]
-        );
         $reportFileUrl = $submission->mitigation_report_path === null
             ? null
             : URL::temporarySignedRoute(
@@ -88,24 +81,10 @@ class GhgReportController extends Controller
                 'time' => $submission->created_at->format('d/m/Y H:i'),
                 'company' => $submission->company_name,
                 'tax_id' => $submission->tax_id,
-                'excel_url' => $excelUrl,
                 'report_file_url' => $reportFileUrl,
                 'report_file_name' => $submission->mitigation_report_original_name,
             ],
         ], 201);
-    }
-
-    public function downloadExcel(
-        GhgSubmission $submission,
-        GhgSubmissionExcelExporter $exporter
-    ): BinaryFileResponse {
-        $path = $exporter->export($submission);
-
-        return response()->download(
-            $path,
-            $exporter->downloadName($submission),
-            ['Content-Type' => 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet']
-        )->deleteFileAfterSend();
     }
 
     public function downloadMitigationReport(GhgSubmission $submission): StreamedResponse

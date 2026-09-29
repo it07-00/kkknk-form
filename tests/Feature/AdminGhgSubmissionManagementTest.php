@@ -2,36 +2,49 @@
 
 namespace Tests\Feature;
 
+use App\Filament\Resources\GhgSubmissions\Pages\ListGhgSubmissions;
+use App\Filament\Resources\GhgSubmissions\Pages\ViewGhgSubmission;
 use App\GhgSubmissionStatus;
 use App\Models\GhgSubmission;
 use App\Models\User;
+use Filament\Facades\Filament;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Facades\Storage;
+use Livewire\Livewire;
 use Tests\TestCase;
 
 class AdminGhgSubmissionManagementTest extends TestCase
 {
     use RefreshDatabase;
 
+    protected function setUp(): void
+    {
+        parent::setUp();
+
+        Filament::setCurrentPanel(Filament::getPanel('admin'));
+        Filament::bootCurrentPanel();
+    }
+
     public function test_admin_can_view_and_search_submissions(): void
     {
         $admin = User::factory()->admin()->create();
-        GhgSubmission::factory()->create([
+        $matchingSubmission = GhgSubmission::factory()->create([
             'code' => 'GHG-2026-TIMTHAY',
             'company_name' => 'Công ty Xanh Sài Gòn',
             'tax_id' => '0311111111',
         ]);
-        GhgSubmission::factory()->create([
+        $otherSubmission = GhgSubmission::factory()->create([
             'code' => 'GHG-2026-KHONGTIM',
             'company_name' => 'Doanh nghiệp Khác',
             'tax_id' => '0322222222',
         ]);
 
-        $this->actingAs($admin)
-            ->get('/admin/submissions?search=0311111111')
-            ->assertOk()
-            ->assertSee('Công ty Xanh Sài Gòn')
-            ->assertDontSee('Doanh nghiệp Khác');
+        $this->actingAs($admin);
+
+        Livewire::test(ListGhgSubmissions::class)
+            ->searchTable('0311111111')
+            ->assertCanSeeTableRecords([$matchingSubmission])
+            ->assertCanNotSeeTableRecords([$otherSubmission]);
     }
 
     public function test_admin_can_view_submission_details(): void
@@ -43,7 +56,7 @@ class AdminGhgSubmissionManagementTest extends TestCase
         ]);
 
         $this->actingAs($admin)
-            ->get(route('admin.submissions.show', $submission))
+            ->get(route('filament.admin.resources.ghg-submissions.view', $submission))
             ->assertOk()
             ->assertSee('Công ty Chi Tiết')
             ->assertSee('0399999999')
@@ -55,11 +68,13 @@ class AdminGhgSubmissionManagementTest extends TestCase
         $admin = User::factory()->admin()->create();
         $submission = GhgSubmission::factory()->create();
 
-        $this->actingAs($admin)
-            ->patch(route('admin.submissions.status.update', $submission), [
+        $this->actingAs($admin);
+
+        Livewire::test(ViewGhgSubmission::class, ['record' => $submission->getRouteKey()])
+            ->callAction('updateStatus', [
                 'status' => GhgSubmissionStatus::Completed->value,
-            ])->assertRedirect(route('admin.submissions.show', $submission))
-            ->assertSessionHas('status', 'Đã cập nhật trạng thái hồ sơ.');
+            ])
+            ->assertHasNoFormErrors();
 
         $submission->refresh();
 
@@ -73,14 +88,13 @@ class AdminGhgSubmissionManagementTest extends TestCase
         $admin = User::factory()->admin()->create();
         $submission = GhgSubmission::factory()->create();
 
-        $this->actingAs($admin)
-            ->from(route('admin.submissions.show', $submission))
-            ->patch(route('admin.submissions.status.update', $submission), [
+        $this->actingAs($admin);
+
+        Livewire::test(ViewGhgSubmission::class, ['record' => $submission->getRouteKey()])
+            ->callAction('updateStatus', [
                 'status' => 'deleted',
-            ])->assertRedirect(route('admin.submissions.show', $submission))
-            ->assertInvalid([
-                'status' => 'Trạng thái hồ sơ không hợp lệ.',
-            ]);
+            ])
+            ->assertHasFormErrors(['status']);
 
         $this->assertSame(GhgSubmissionStatus::Submitted, $submission->fresh()->status);
     }
@@ -98,22 +112,52 @@ class AdminGhgSubmissionManagementTest extends TestCase
         ]);
 
         $this->actingAs($admin)
-            ->get(route('admin.submissions.report.download', $submission))
+            ->get(route('admin.ghg-submissions.report.download', $submission))
             ->assertOk()
             ->assertDownload('bao-cao.pdf');
     }
 
-    public function test_non_admin_cannot_change_submission_status(): void
+    public function test_admin_can_download_submission_excel_from_internal_route(): void
+    {
+        $admin = User::factory()->admin()->create();
+        $submission = GhgSubmission::factory()->create();
+
+        $this->actingAs($admin)
+            ->get(route('admin.ghg-submissions.excel.download', $submission))
+            ->assertOk()
+            ->assertDownload();
+    }
+
+    public function test_non_admin_cannot_download_internal_submission_files(): void
     {
         $user = User::factory()->create();
         $submission = GhgSubmission::factory()->create();
 
         $this->actingAs($user)
-            ->patch(route('admin.submissions.status.update', $submission), [
-                'status' => GhgSubmissionStatus::Completed->value,
-            ])->assertForbidden();
+            ->get(route('admin.ghg-submissions.excel.download', $submission))
+            ->assertForbidden();
 
-        $this->assertSame(GhgSubmissionStatus::Submitted, $submission->fresh()->status);
+        $this->actingAs($user)
+            ->get(route('admin.ghg-submissions.report.download', $submission))
+            ->assertForbidden();
+    }
+
+    public function test_admin_can_filter_submissions_by_status(): void
+    {
+        $admin = User::factory()->admin()->create();
+        $completedSubmission = GhgSubmission::factory()->create([
+            'status' => GhgSubmissionStatus::Completed,
+        ]);
+        $submittedSubmission = GhgSubmission::factory()->create([
+            'status' => GhgSubmissionStatus::Submitted,
+        ]);
+
+        $this->actingAs($admin);
+
+        Livewire::test(ListGhgSubmissions::class)
+            ->filterTable('status', GhgSubmissionStatus::Completed->value)
+            ->assertCanSeeTableRecords([$completedSubmission])
+            ->assertCanNotSeeTableRecords([$submittedSubmission]);
     }
 
     public function test_admin_detail_escapes_submitted_company_content(): void
@@ -124,19 +168,10 @@ class AdminGhgSubmissionManagementTest extends TestCase
         ]);
 
         $response = $this->actingAs($admin)
-            ->get(route('admin.submissions.show', $submission));
+            ->get(route('filament.admin.resources.ghg-submissions.view', $submission));
 
         $response->assertOk()
             ->assertSee('&lt;script&gt;alert', false)
             ->assertDontSee('<script>alert("xss")</script>', false);
-    }
-
-    public function test_invalid_index_status_filter_is_rejected(): void
-    {
-        $admin = User::factory()->admin()->create();
-
-        $this->actingAs($admin)
-            ->get('/admin/submissions?status=deleted')
-            ->assertSessionHasErrors('status');
     }
 }

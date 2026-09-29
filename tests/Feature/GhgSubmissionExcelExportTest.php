@@ -2,9 +2,12 @@
 
 namespace Tests\Feature;
 
+use App\Models\GhgSubmission;
+use App\Services\GhgSubmissionExcelExporter;
 use DOMDocument;
 use DOMXPath;
 use Illuminate\Foundation\Testing\RefreshDatabase;
+use Illuminate\Support\Facades\Route;
 use Tests\TestCase;
 use ZipArchive;
 
@@ -12,17 +15,14 @@ class GhgSubmissionExcelExportTest extends TestCase
 {
     use RefreshDatabase;
 
-    public function test_signed_download_exports_saved_submission_using_excel_template(): void
+    public function test_internal_exporter_exports_saved_submission_using_excel_template(): void
     {
-        $storeResponse = $this->postJson(route('form.submit'), $this->validPayload());
-        $excelUrl = $storeResponse->json('receipt.excel_url');
-
-        $response = $this->get($excelUrl);
-
-        $response->assertOk()->assertDownload();
+        $this->postJson(route('form.submit'), $this->validPayload())->assertCreated();
+        $submission = GhgSubmission::query()->sole();
+        $path = app(GhgSubmissionExcelExporter::class)->export($submission);
 
         $archive = new ZipArchive;
-        $this->assertTrue($archive->open($response->baseResponse->getFile()->getPathname()) === true);
+        $this->assertTrue($archive->open($path) === true);
 
         $inventoryValues = $this->worksheetValues((string) $archive->getFromName('xl/worksheets/sheet1.xml'));
         $mitigationValues = $this->worksheetValues((string) $archive->getFromName('xl/worksheets/sheet2.xml'));
@@ -43,14 +43,13 @@ class GhgSubmissionExcelExportTest extends TestCase
         $this->assertSame('3200', $inventoryValues['W6']);
         $this->assertSame('Năm 2025', $inventoryValues['C7']);
         $this->assertSame('0.2', $mitigationValues['K4']);
+
+        unlink($path);
     }
 
-    public function test_download_returns_403_without_a_valid_signature(): void
+    public function test_customer_excel_download_route_is_not_registered(): void
     {
-        $storeResponse = $this->postJson(route('form.submit'), $this->validPayload());
-        $unsignedPath = (string) parse_url($storeResponse->json('receipt.excel_url'), PHP_URL_PATH);
-
-        $this->get($unsignedPath)->assertForbidden();
+        $this->assertFalse(Route::has('submissions.excel'));
     }
 
     public function test_submission_returns_422_when_a_selected_year_has_no_inventory(): void

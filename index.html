@@ -572,16 +572,26 @@
                        'bg-slate-100 text-txsecondary border border-borderui group-hover:border-[#003c33]/40 group-hover:text-[#003c33] group-hover:bg-white': !completedSteps.includes(st.number) && currentStep !== st.number
                      }"
                   >
-                    <template
-                      x-if="completedSteps.includes(st.number) && currentStep !== st.number"
+                    <!-- Checkmark icon for completed steps -->
+                    <svg
+                      x-show="completedSteps.includes(st.number) && currentStep !== st.number"
+                      class="w-4 h-4"
+                      viewBox="0 0 24 24"
+                      fill="none"
+                      stroke="currentColor"
+                      stroke-width="2.5"
+                      stroke-linecap="round"
+                      stroke-linejoin="round"
+                      aria-hidden="true"
                     >
-                      <i data-lucide="check" class="w-4 h-4"></i>
-                    </template>
-                    <template
-                      x-if="!completedSteps.includes(st.number) || currentStep === st.number"
-                    >
-                      <span x-text="st.number"></span>
-                    </template>
+                      <polyline points="20 6 9 17 4 12"></polyline>
+                    </svg>
+
+                    <!-- Step number for uncompleted or active step -->
+                    <span
+                      x-show="!completedSteps.includes(st.number) || currentStep === st.number"
+                      x-text="st.number"
+                    ></span>
                   </div>
 
                   <!-- Step Info -->
@@ -599,12 +609,19 @@
                   </div>
 
                   <!-- Current Arrow Indicator -->
-                  <template x-if="currentStep === st.number">
-                    <i
-                      data-lucide="chevron-right"
-                      class="w-4 h-4 text-[#9fe870] flex-shrink-0"
-                    ></i>
-                  </template>
+                  <svg
+                    x-show="currentStep === st.number"
+                    class="w-4 h-4 text-[#9fe870] flex-shrink-0"
+                    viewBox="0 0 24 24"
+                    fill="none"
+                    stroke="currentColor"
+                    stroke-width="2.5"
+                    stroke-linecap="round"
+                    stroke-linejoin="round"
+                    aria-hidden="true"
+                  >
+                    <polyline points="9 18 15 12 9 6"></polyline>
+                  </svg>
                 </button>
               </template>
             </nav>
