@@ -24,24 +24,90 @@ class GhgSubmissionExcelExportTest extends TestCase
         $archive = new ZipArchive;
         $this->assertTrue($archive->open($path) === true);
 
-        $inventoryValues = $this->worksheetValues((string) $archive->getFromName('xl/worksheets/sheet1.xml'));
+        $inventoryXml = (string) $archive->getFromName('xl/worksheets/sheet1.xml');
+        $inventoryValues = $this->worksheetValues($inventoryXml);
         $mitigationValues = $this->worksheetValues((string) $archive->getFromName('xl/worksheets/sheet2.xml'));
         $archive->close();
 
         $this->assertSame('Công ty TNHH Takigawa Việt Nam', $inventoryValues['B6']);
+        $this->assertSame('1', $inventoryValues['A6']);
         $this->assertSame('Năm 2024', $inventoryValues['C6']);
         $this->assertSame('3701858627', $inventoryValues['F6']);
         $this->assertSame('3000000', $inventoryValues['I6']);
-        $this->assertSame('3 tấn hơi/giờ; 5 tấn hơi/giờ', $inventoryValues['K6']);
-        $this->assertSame('Sinh khối; Dầu DO', $inventoryValues['L6']);
-        $this->assertSame('500 tấn/năm; 700 lít/năm', $inventoryValues['M6']);
-        $this->assertSame('Máy lạnh; Chiller', $inventoryValues['N6']);
-        $this->assertSame('2 HP; 50 HP', $inventoryValues['O6']);
-        $this->assertSame('R22; R134a', $inventoryValues['P6']);
-        $this->assertSame('10; 20', $inventoryValues['Q6']);
-        $this->assertSame('2000', $inventoryValues['U6']);
-        $this->assertSame('3200', $inventoryValues['W6']);
-        $this->assertSame('Năm 2025', $inventoryValues['C7']);
+        $this->assertSame('3 tấn hơi/giờ', $inventoryValues['K6']);
+        $this->assertSame('Sinh khối', $inventoryValues['L6']);
+        $this->assertSame('500 tấn/năm', $inventoryValues['M6']);
+        $this->assertSame('Lò hơi', $inventoryValues['S6']);
+        $this->assertSame('Sinh khối', $inventoryValues['T6']);
+        $this->assertSame('500', $inventoryValues['U6']);
+        $this->assertSame('tấn/năm', $inventoryValues['V6']);
+        $this->assertSame('2000', $inventoryValues['X6']);
+        $this->assertSame('1200', $inventoryValues['Y6']);
+        $this->assertSame('3200', $inventoryValues['Z6']);
+        $this->assertSame('Kê khai trực tiếp theo hóa đơn', $inventoryValues['AB6']);
+        $this->assertSame('https://example.com/bao-cao-2024', $inventoryValues['AC6']);
+
+        $this->assertSame('5 tấn hơi/giờ', $inventoryValues['K7']);
+        $this->assertSame('Dầu DO', $inventoryValues['L7']);
+        $this->assertSame('700 lít/năm', $inventoryValues['M7']);
+        $this->assertArrayNotHasKey('A7', $inventoryValues);
+        $this->assertArrayNotHasKey('B7', $inventoryValues);
+        $this->assertArrayNotHasKey('C7', $inventoryValues);
+        $this->assertArrayNotHasKey('X7', $inventoryValues);
+
+        $this->assertSame('Máy lạnh', $inventoryValues['N8']);
+        $this->assertSame('R22', $inventoryValues['T8']);
+        $this->assertSame('10', $inventoryValues['U8']);
+        $this->assertSame('kg', $inventoryValues['V8']);
+        $this->assertSame('Máy lạnh — 2 HP', $inventoryValues['W8']);
+        $this->assertSame('2', $inventoryValues['AA8']);
+
+        $this->assertSame('Chiller', $inventoryValues['N9']);
+        $this->assertSame('R134a', $inventoryValues['T9']);
+        $this->assertSame('20', $inventoryValues['U9']);
+        $this->assertSame('3', $inventoryValues['AA9']);
+
+        $this->assertSame('Đốt nhiên liệu di động', $inventoryValues['S10']);
+        $this->assertSame('Dầu DO', $inventoryValues['T10']);
+        $this->assertSame('15000', $inventoryValues['U10']);
+        $this->assertSame('lít', $inventoryValues['V10']);
+        $this->assertSame('Phương tiện vận tải của Công ty', $inventoryValues['W10']);
+
+        $this->assertSame('2', $inventoryValues['A11']);
+        $this->assertSame('Năm 2025', $inventoryValues['C11']);
+        $this->assertArrayNotHasKey('B11', $inventoryValues);
+        $this->assertArrayNotHasKey('C15', $inventoryValues);
+        $this->assertSame('Chi tiết nguồn phát thải', $inventoryValues['S4']);
+        $this->assertSame('Loại nguồn', $inventoryValues['S5']);
+        $this->assertSame('Nhiên liệu / môi chất', $inventoryValues['T5']);
+        $this->assertSame('Số lượng', $inventoryValues['U5']);
+        $this->assertSame('Đơn vị', $inventoryValues['V5']);
+        $this->assertSame('Ghi chú', $inventoryValues['W5']);
+        $this->assertSame('Tổng phát thải theo năm (tCO₂e)', $inventoryValues['X4']);
+        $this->assertSame('Phạm vi 1', $inventoryValues['X5']);
+        $this->assertSame('Phạm vi 2', $inventoryValues['Y5']);
+        $this->assertSame('Tổng cộng', $inventoryValues['Z5']);
+        $this->assertSame('Thông tin bổ sung', $inventoryValues['AA4']);
+        $this->assertSame('Lượng nạp bổ sung (kg)', $inventoryValues['AA5']);
+        $this->assertSame('Phương thức báo cáo', $inventoryValues['AB5']);
+        $this->assertSame('Liên kết báo cáo', $inventoryValues['AC5']);
+        $this->assertStringContainsString('ref="A4:AC15"', $inventoryXml);
+        $this->assertStringContainsString('ref="S4:W4"', $inventoryXml);
+        $this->assertStringContainsString('ref="X4:Z4"', $inventoryXml);
+        $this->assertStringContainsString('ref="AA4:AC4"', $inventoryXml);
+        $this->assertStringContainsString('ref="B6:B15"', $inventoryXml);
+        $this->assertStringContainsString('ref="D6:D15"', $inventoryXml);
+        $this->assertStringContainsString('ref="G6:G15"', $inventoryXml);
+        $this->assertStringContainsString('ref="A6:A10"', $inventoryXml);
+        $this->assertStringContainsString('ref="C6:C10"', $inventoryXml);
+        $this->assertStringContainsString('ref="I6:I10"', $inventoryXml);
+        $this->assertStringContainsString('ref="J6:J10"', $inventoryXml);
+        $this->assertStringContainsString('ref="R6:R10"', $inventoryXml);
+        $this->assertStringContainsString('ref="X6:X10"', $inventoryXml);
+        $this->assertStringContainsString('ref="Y6:Y10"', $inventoryXml);
+        $this->assertStringContainsString('ref="Z6:Z10"', $inventoryXml);
+        $this->assertStringContainsString('ref="AB6:AB10"', $inventoryXml);
+        $this->assertStringContainsString('ref="AC6:AC10"', $inventoryXml);
         $this->assertSame('0.2', $mitigationValues['K4']);
 
         unlink($path);
@@ -195,7 +261,7 @@ class GhgSubmissionExcelExportTest extends TestCase
             'scope1_emissions' => $scope1Emissions,
             'scope2_emissions' => $scope2Emissions,
             'report_method' => 'Kê khai trực tiếp theo hóa đơn',
-            'report_url' => '',
+            'report_url' => $gridElectricity === 3000000 ? 'https://example.com/bao-cao-2024' : '',
         ];
     }
 }
