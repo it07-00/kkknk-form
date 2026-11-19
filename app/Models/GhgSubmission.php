@@ -24,6 +24,7 @@ class GhgSubmission extends Model
         'status',
         'reviewed_by',
         'reviewed_at',
+        'review_note',
         'ip_address',
     ];
 

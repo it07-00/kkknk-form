@@ -9,9 +9,6 @@ use Illuminate\Validation\Validator;
 class StoreGhgSubmissionRequest extends FormRequest
 {
     /** @var array<int, string> */
-    private const REPORTING_YEARS = ['2024', '2025', '2026'];
-
-    /** @var array<int, string> */
     private const REPORT_METHODS = ['Chưa có báo cáo', 'Dán link báo cáo', 'Kê khai trực tiếp theo hóa đơn'];
 
     /** @var array<int, string> */
@@ -92,6 +89,11 @@ class StoreGhgSubmissionRequest extends FormRequest
      */
     public function rules(): array
     {
+        $reportingYears = array_map(
+            static fn (int|string $year): string => (string) $year,
+            config('ghg.reporting_years', ['2024', '2025', '2026'])
+        );
+
         return [
             'formData' => ['required', 'array:company,reporting_years,inventory,mitigation,confirmation'],
             'formData.company' => ['required', 'array:name,tax_code,address,industry,email,legal_representative,technical_contact'],
@@ -106,9 +108,9 @@ class StoreGhgSubmissionRequest extends FormRequest
             'formData.company.technical_contact' => ['required', 'array:name,phone'],
             'formData.company.technical_contact.name' => ['required', 'string', 'max:255'],
             'formData.company.technical_contact.phone' => ['required', 'string', 'max:30', 'regex:/^0(?:3|5|7|8|9)[0-9]{8}$/'],
-            'formData.reporting_years' => ['required', 'array', 'min:1', 'max:3'],
-            'formData.reporting_years.*' => ['required', 'string', 'distinct', Rule::in(self::REPORTING_YEARS)],
-            'formData.inventory' => ['required', 'array:2024,2025,2026'],
+            'formData.reporting_years' => ['required', 'array', 'min:1', 'max:'.count($reportingYears)],
+            'formData.reporting_years.*' => ['required', 'string', 'distinct', Rule::in($reportingYears)],
+            'formData.inventory' => ['required', 'array:'.implode(',', $reportingYears)],
             'formData.inventory.*' => ['array:has_scope1,has_boiler,boilers,has_cooling,refrigeration_systems,scope1_sources,grid_electricity_kwh,solar_electricity_kwh,energy_toe,scope1_emissions,scope2_emissions,report_method,report_url'],
             'formData.inventory.*.has_scope1' => ['required', 'boolean'],
             'formData.inventory.*.has_boiler' => ['nullable', 'boolean'],
@@ -171,7 +173,7 @@ class StoreGhgSubmissionRequest extends FormRequest
             'formData.company.legal_representative.phone.regex' => 'Số điện thoại Người đại diện phải là số di động Việt Nam hợp lệ.',
             'formData.company.technical_contact.phone.required' => 'Vui lòng nhập số điện thoại cán bộ phụ trách số liệu.',
             'formData.company.technical_contact.phone.regex' => 'Số điện thoại cán bộ phụ trách phải là số di động Việt Nam hợp lệ.',
-            'formData.reporting_years.*.in' => 'Kỳ báo cáo chỉ hỗ trợ các năm 2024, 2025 và 2026.',
+            'formData.reporting_years.*.in' => 'Kỳ báo cáo chỉ hỗ trợ các năm '.implode(', ', config('ghg.reporting_years', ['2024', '2025', '2026'])).'.',
             'formData.mitigation.implemented.required' => 'Vui lòng xác nhận tình trạng thực hiện biện pháp giảm nhẹ.',
             'formData.confirmation.accepted' => 'Vui lòng xác nhận tính chính xác của dữ liệu trước khi gửi.',
             'formData.inventory.*.report_url.url' => 'Đường dẫn báo cáo kiểm kê không đúng định dạng URL.',

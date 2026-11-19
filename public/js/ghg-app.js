@@ -1798,7 +1798,10 @@ function ghgApp() {
                 body: payload,
               });
 
-              const result = await response.json();
+              const contentType = response.headers.get("content-type") || "";
+              const result = contentType.includes("application/json")
+                ? await response.json().catch(() => ({}))
+                : {};
 
               if (!response.ok) {
                 const serverErrors = result.errors || {};
@@ -1824,11 +1827,24 @@ function ghgApp() {
                   this.focusFieldByKey(firstErrorKey);
                 }
 
-                throw new Error(
-                  response.status === 422
-                    ? "Dữ liệu chưa hợp lệ. Vui lòng đóng hộp thoại và kiểm tra lại các trường được đánh dấu."
-                    : "Hệ thống chưa thể tiếp nhận hồ sơ. Vui lòng thử lại.",
-                );
+                let errorMessage =
+                  "Hệ thống chưa thể tiếp nhận hồ sơ. Vui lòng thử lại.";
+
+                if (response.status === 413) {
+                  errorMessage =
+                    "Dung lượng tệp tải lên vượt quá giới hạn cho phép của máy chủ.";
+                } else if (response.status === 419) {
+                  errorMessage =
+                    "Phiên làm việc đã hết hạn. Vui lòng tải lại trang và thử gửi lại.";
+                } else if (response.status === 422) {
+                  errorMessage =
+                    "Dữ liệu chưa hợp lệ. Vui lòng đóng hộp thoại và kiểm tra lại các trường được đánh dấu.";
+                } else if (response.status === 429) {
+                  errorMessage =
+                    "Bạn thao tác quá nhanh. Vui lòng đợi một chút rồi thử lại.";
+                }
+
+                throw new Error(errorMessage);
               }
 
               this.submittedDataReceipt = result.receipt;

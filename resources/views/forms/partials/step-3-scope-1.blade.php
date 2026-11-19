@@ -1,6 +1,6 @@
 <div x-show="currentStep === 3" x-cloak class="space-y-6">
               <div
-                class="bg-surface rounded-3xl border border-borderui p-7 sm:p-9 shadow-card space-y-7"
+                class="bg-surface rounded-2xl sm:rounded-3xl border border-borderui p-4 sm:p-7 lg:p-9 shadow-card space-y-6 sm:space-y-7"
               >
                 <!-- Section Header -->
                 <div class="border-b border-borderui pb-5">
@@ -23,14 +23,14 @@
                 <!-- YEAR SELECTION TABS (Modern Segmented Pill Control) -->
                 <template x-if="formData.reporting_years.length > 1">
                   <div
-                    class="bg-[#EEF3F0] p-1.5 rounded-2xl inline-flex space-x-1 border border-borderui"
+                    class="bg-[#EEF3F0] p-1.5 rounded-2xl flex flex-wrap sm:inline-flex gap-1.5 border border-borderui"
                   >
                     <template x-for="yr in formData.reporting_years" :key="yr">
                       <button
                         type="button"
                         @click="activeScope1Year = yr"
                         :class="activeScope1Year === yr ? 'bg-[#003c33] text-white shadow-sm font-bold' : 'text-txsecondary hover:text-txprimary hover:bg-white/60 font-medium'"
-                        class="px-5 py-2.5 rounded-xl text-sm font-medium transition-all flex items-center space-x-2"
+                        class="flex-1 sm:flex-initial justify-center px-3.5 sm:px-5 py-2 sm:py-2.5 rounded-xl text-xs sm:text-sm font-medium transition-all flex items-center gap-2 whitespace-nowrap"
                       >
                         <i data-lucide="calendar" class="w-4 h-4"></i>
                         <span x-text="'Số liệu Năm ' + yr"></span>

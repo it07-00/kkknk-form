@@ -3,24 +3,32 @@
         >
           <!-- STEPPER CARD (EcoCheck Style) -->
           <div
-            class="bg-surface rounded-3xl border border-borderui p-5 shadow-card space-y-3"
+            class="bg-surface rounded-3xl border border-borderui p-5 shadow-card space-y-4"
           >
             <div
-              class="flex items-center justify-between pb-3 border-b border-borderui"
+              class="space-y-3 pb-3.5 border-b border-borderui"
             >
-              <div>
-                <span
-                  class="text-xs uppercase tracking-wider text-txsecondary font-bold"
-                  >Quy trình kê khai</span
-                >
-                <div class="text-sm font-extrabold text-txprimary">
-                  Các bước thực hiện
+              <div class="flex items-center justify-between">
+                <div>
+                  <span
+                    class="text-[11px] uppercase tracking-wider text-txsecondary font-bold"
+                    >Quy trình kê khai</span
+                  >
+                  <div class="text-sm font-extrabold text-[#0e271f]">
+                    Các bước thực hiện
+                  </div>
                 </div>
+                <span
+                  class="text-xs font-mono font-bold px-2.5 py-1 rounded-lg bg-[#003c33] text-[#9fe870] shadow-sm"
+                  x-text="currentStep + ' / 7'"
+                ></span>
               </div>
-              <span
-                class="text-xs font-mono font-bold px-2.5 py-1 rounded-lg bg-[#003c33] text-[#9fe870] shadow-sm"
-                x-text="currentStep + ' / 7'"
-              ></span>
+              <div class="w-full h-1.5 bg-[#E6EEE9] rounded-full overflow-hidden">
+                <div
+                  class="h-full bg-gradient-to-r from-[#003c33] via-[#1a7e4b] to-[#9fe870] rounded-full transition-all duration-500 ease-out"
+                  :style="'width: ' + stepProgressPercent + '%'"
+                ></div>
+              </div>
             </div>
 
             <!-- Stepper List -->

@@ -11,13 +11,14 @@ use Illuminate\Database\Eloquent\Attributes\Hidden;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Notifications\Notifiable;
+use Spatie\Permission\Traits\HasRoles;
 
 #[Fillable(['name', 'email', 'password'])]
 #[Hidden(['password', 'remember_token'])]
 class User extends Authenticatable implements FilamentUser
 {
     /** @use HasFactory<UserFactory> */
-    use HasFactory, Notifiable;
+    use HasFactory, HasRoles, Notifiable;
 
     /**
      * Get the attributes that should be cast.
@@ -35,7 +36,16 @@ class User extends Authenticatable implements FilamentUser
 
     public function isAdmin(): bool
     {
-        return $this->is_admin === true;
+        return $this->is_admin === true || $this->hasAnyRole(['super_admin', 'reviewer', 'viewer']);
+    }
+
+    public function hasPermissionOrLegacyAdmin(string $permission): bool
+    {
+        if ($this->is_admin === true && ! $this->roles()->exists() && ! $this->permissions()->exists()) {
+            return true;
+        }
+
+        return $this->can($permission);
     }
 
     public function canAccessPanel(Panel $panel): bool

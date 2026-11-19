@@ -12,10 +12,10 @@
       ></div>
 
       <div
-        class="flex min-h-full items-end sm:items-center justify-center p-4 text-center sm:p-0"
+        class="flex min-h-full items-end sm:items-center justify-center p-3.5 sm:p-4 text-center"
       >
         <div
-          class="relative transform overflow-hidden rounded-3xl bg-white text-left shadow-2xl transition-all sm:my-8 sm:w-full sm:max-w-lg p-7 space-y-5 border border-borderui"
+          class="relative transform overflow-hidden rounded-2xl sm:rounded-3xl bg-white text-left shadow-2xl transition-all w-full sm:my-8 sm:max-w-lg p-5 sm:p-7 space-y-5 border border-borderui"
         >
           <div class="flex items-start space-x-4">
             <div

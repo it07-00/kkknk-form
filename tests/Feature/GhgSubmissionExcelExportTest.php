@@ -37,10 +37,8 @@ class GhgSubmissionExcelExportTest extends TestCase
         $this->assertSame('3 tấn hơi/giờ', $inventoryValues['K6']);
         $this->assertSame('Sinh khối', $inventoryValues['L6']);
         $this->assertSame('500 tấn/năm', $inventoryValues['M6']);
-        $this->assertSame('Lò hơi', $inventoryValues['S6']);
-        $this->assertSame('Sinh khối', $inventoryValues['T6']);
-        $this->assertSame('500', $inventoryValues['U6']);
-        $this->assertSame('tấn/năm', $inventoryValues['V6']);
+        $this->assertArrayNotHasKey('S6', $inventoryValues);
+        $this->assertArrayNotHasKey('T6', $inventoryValues);
         $this->assertSame('2000', $inventoryValues['X6']);
         $this->assertSame('1200', $inventoryValues['Y6']);
         $this->assertSame('3200', $inventoryValues['Z6']);
@@ -56,15 +54,12 @@ class GhgSubmissionExcelExportTest extends TestCase
         $this->assertArrayNotHasKey('X7', $inventoryValues);
 
         $this->assertSame('Máy lạnh', $inventoryValues['N8']);
-        $this->assertSame('R22', $inventoryValues['T8']);
-        $this->assertSame('10', $inventoryValues['U8']);
-        $this->assertSame('kg', $inventoryValues['V8']);
-        $this->assertSame('Máy lạnh — 2 HP', $inventoryValues['W8']);
+        $this->assertArrayNotHasKey('T8', $inventoryValues);
+        $this->assertArrayNotHasKey('W8', $inventoryValues);
         $this->assertSame('2', $inventoryValues['AA8']);
 
         $this->assertSame('Chiller', $inventoryValues['N9']);
-        $this->assertSame('R134a', $inventoryValues['T9']);
-        $this->assertSame('20', $inventoryValues['U9']);
+        $this->assertArrayNotHasKey('T9', $inventoryValues);
         $this->assertSame('3', $inventoryValues['AA9']);
 
         $this->assertSame('Đốt nhiên liệu di động', $inventoryValues['S10']);
@@ -77,9 +72,9 @@ class GhgSubmissionExcelExportTest extends TestCase
         $this->assertSame('Năm 2025', $inventoryValues['C11']);
         $this->assertArrayNotHasKey('B11', $inventoryValues);
         $this->assertArrayNotHasKey('C15', $inventoryValues);
-        $this->assertSame('Chi tiết nguồn phát thải', $inventoryValues['S4']);
+        $this->assertSame('Nguồn phát thải Phạm vi 1 khác', $inventoryValues['S4']);
         $this->assertSame('Loại nguồn', $inventoryValues['S5']);
-        $this->assertSame('Nhiên liệu / môi chất', $inventoryValues['T5']);
+        $this->assertSame('Nhiên liệu / chất sử dụng', $inventoryValues['T5']);
         $this->assertSame('Số lượng', $inventoryValues['U5']);
         $this->assertSame('Đơn vị', $inventoryValues['V5']);
         $this->assertSame('Ghi chú', $inventoryValues['W5']);
@@ -91,7 +86,11 @@ class GhgSubmissionExcelExportTest extends TestCase
         $this->assertSame('Lượng nạp bổ sung (kg)', $inventoryValues['AA5']);
         $this->assertSame('Phương thức báo cáo', $inventoryValues['AB5']);
         $this->assertSame('Liên kết báo cáo', $inventoryValues['AC5']);
-        $this->assertStringContainsString('ref="A4:AC15"', $inventoryXml);
+        $this->assertSame('TỔNG CỘNG', $inventoryValues['B16']);
+        $this->assertSame('4000', $inventoryValues['X16']);
+        $this->assertSame('2550', $inventoryValues['Y16']);
+        $this->assertSame('6550', $inventoryValues['Z16']);
+        $this->assertStringContainsString('ref="A4:AC16"', $inventoryXml);
         $this->assertStringContainsString('ref="S4:W4"', $inventoryXml);
         $this->assertStringContainsString('ref="X4:Z4"', $inventoryXml);
         $this->assertStringContainsString('ref="AA4:AC4"', $inventoryXml);
@@ -158,6 +157,46 @@ class GhgSubmissionExcelExportTest extends TestCase
         }
 
         return $values;
+    }
+
+    public function test_internal_exporter_exports_multiple_submissions_with_summary_row(): void
+    {
+        $first = GhgSubmission::factory()->create(['company_name' => 'Công ty Một']);
+        $second = GhgSubmission::factory()->create(['company_name' => 'Công ty Hai']);
+
+        $path = app(GhgSubmissionExcelExporter::class)->exportMany(collect([$first, $second]));
+
+        $archive = new ZipArchive;
+        $this->assertTrue($archive->open($path) === true);
+        $mitigationValues = $this->worksheetValues((string) $archive->getFromName('xl/worksheets/sheet2.xml'));
+        $archive->close();
+
+        $this->assertSame('1', $mitigationValues['A4']);
+        $this->assertSame('2', $mitigationValues['A5']);
+        $this->assertSame('TỔNG CỘNG', $mitigationValues['B6']);
+    }
+
+    public function test_internal_exporter_neutralizes_excel_formula_injection(): void
+    {
+        $payload = $this->validPayload();
+        $payload['formData']['company']['name'] = '=CMD("calc")';
+        $payload['formData']['company']['address'] = '+SUM(1,2)';
+        $payload['formData']['mitigation']['plan_2026_2030'] = '@evil';
+
+        $this->postJson(route('form.submit'), $payload)->assertCreated();
+        $submission = GhgSubmission::query()->sole();
+        $path = app(GhgSubmissionExcelExporter::class)->export($submission);
+
+        $archive = new ZipArchive;
+        $this->assertTrue($archive->open($path) === true);
+
+        $inventoryValues = $this->worksheetValues((string) $archive->getFromName('xl/worksheets/sheet1.xml'));
+        $mitigationValues = $this->worksheetValues((string) $archive->getFromName('xl/worksheets/sheet2.xml'));
+        $archive->close();
+
+        $this->assertSame('\'=CMD("calc")', $inventoryValues['B6']);
+        $this->assertSame('\'+SUM(1,2)', $inventoryValues['D6']);
+        $this->assertSame('\'@evil', $mitigationValues['G4']);
     }
 
     /**

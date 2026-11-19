@@ -4,9 +4,14 @@ namespace Tests\Feature;
 
 use App\Filament\Resources\GhgSubmissions\Pages\ListGhgSubmissions;
 use App\Filament\Resources\GhgSubmissions\Pages\ViewGhgSubmission;
+use App\Filament\Widgets\GhgEmissionsByYearChart;
+use App\Filament\Widgets\GhgStatsOverviewWidget;
+use App\Filament\Widgets\GhgSubmissionsByStatusChart;
+use App\Filament\Widgets\GhgTopEmittersTableWidget;
 use App\GhgSubmissionStatus;
 use App\Models\GhgSubmission;
 use App\Models\User;
+use Database\Seeders\RoleAndPermissionSeeder;
 use Filament\Facades\Filament;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Facades\Storage;
@@ -73,12 +78,14 @@ class AdminGhgSubmissionManagementTest extends TestCase
         Livewire::test(ViewGhgSubmission::class, ['record' => $submission->getRouteKey()])
             ->callAction('updateStatus', [
                 'status' => GhgSubmissionStatus::Completed->value,
+                'review_note' => 'Đã kiểm tra đủ số liệu.',
             ])
             ->assertHasNoFormErrors();
 
         $submission->refresh();
 
         $this->assertSame(GhgSubmissionStatus::Completed, $submission->status);
+        $this->assertSame('Đã kiểm tra đủ số liệu.', $submission->review_note);
         $this->assertTrue($submission->reviewer->is($admin));
         $this->assertNotNull($submission->reviewed_at);
     }
@@ -173,5 +180,51 @@ class AdminGhgSubmissionManagementTest extends TestCase
         $response->assertOk()
             ->assertSee('&lt;script&gt;alert', false)
             ->assertDontSee('<script>alert("xss")</script>', false);
+    }
+
+    public function test_viewer_role_can_view_submissions_but_cannot_review_or_manage_users(): void
+    {
+        $this->seed(RoleAndPermissionSeeder::class);
+
+        $viewer = User::factory()->create(['is_admin' => true]);
+        $viewer->assignRole('viewer');
+        $submission = GhgSubmission::factory()->create();
+
+        $this->actingAs($viewer)
+            ->get(route('filament.admin.resources.ghg-submissions.view', $submission))
+            ->assertOk();
+
+        $this->actingAs($viewer)
+            ->get(route('filament.admin.resources.users.index'))
+            ->assertForbidden();
+
+        $this->assertFalse($viewer->can('update', $submission));
+    }
+
+    public function test_super_admin_role_can_access_user_management_and_dashboard_widgets(): void
+    {
+        $this->seed(RoleAndPermissionSeeder::class);
+
+        $superAdmin = User::factory()->create(['is_admin' => true]);
+        $superAdmin->assignRole('super_admin');
+        GhgSubmission::factory()->create();
+
+        $this->actingAs($superAdmin)
+            ->get(route('filament.admin.pages.dashboard'))
+            ->assertOk();
+
+        Livewire::actingAs($superAdmin);
+
+        Livewire::test(GhgStatsOverviewWidget::class)
+            ->assertSee('Tổng hồ sơ tiếp nhận')
+            ->assertSee('Tổng phát thải ghi nhận');
+
+        Livewire::test(GhgSubmissionsByStatusChart::class)->assertOk();
+        Livewire::test(GhgEmissionsByYearChart::class)->assertOk();
+        Livewire::test(GhgTopEmittersTableWidget::class)->assertOk();
+
+        $this->actingAs($superAdmin)
+            ->get(route('filament.admin.resources.users.index'))
+            ->assertOk();
     }
 }

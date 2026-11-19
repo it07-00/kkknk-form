@@ -20,6 +20,7 @@ class AdminUserSeeder extends Seeder
             ]
         );
         $admin->forceFill(['is_admin' => true])->save();
+        $admin->syncRoles(['super_admin']);
 
         $demo = User::query()->updateOrCreate(
             ['email' => 'demo@kkknk.local'],
@@ -29,5 +30,6 @@ class AdminUserSeeder extends Seeder
             ]
         );
         $demo->forceFill(['is_admin' => true])->save();
+        $demo->syncRoles(['reviewer']);
     }
 }

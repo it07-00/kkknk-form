@@ -1,6 +1,6 @@
-<section x-show="isSubmitted" x-cloak class="max-w-3xl mx-auto py-10">
+<section x-show="isSubmitted" x-cloak class="max-w-3xl mx-auto px-3.5 sm:px-6 py-6 sm:py-10">
         <div
-          class="bg-surface rounded-3xl border border-borderui p-8 sm:p-12 text-center shadow-card relative overflow-hidden"
+          class="bg-surface rounded-2xl sm:rounded-3xl border border-borderui p-5 sm:p-10 text-center shadow-card relative overflow-hidden"
         >
           <div
             class="absolute -right-16 -top-16 w-56 h-56 bg-gradient-to-bl from-[#9fe870]/25 via-[#003c33]/10 to-transparent rounded-full blur-2xl pointer-events-none"

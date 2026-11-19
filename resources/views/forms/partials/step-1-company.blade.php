@@ -1,6 +1,6 @@
 <div x-show="currentStep === 1" x-cloak class="space-y-6">
               <div
-                class="bg-surface rounded-3xl border border-borderui p-7 sm:p-9 shadow-card space-y-7"
+                class="bg-surface rounded-2xl sm:rounded-3xl border border-borderui p-4 sm:p-7 lg:p-9 shadow-card space-y-6 sm:space-y-7"
               >
                 <!-- Section Header -->
                 <div class="border-b border-borderui pb-5">

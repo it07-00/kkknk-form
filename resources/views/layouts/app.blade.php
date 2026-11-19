@@ -125,7 +125,30 @@
       }
 
       html {
-        scroll-padding-top: 8.5rem;
+        scroll-padding-top: 9.5rem;
+      }
+
+      @media (min-width: 640px) {
+        html {
+          scroll-padding-top: 8.5rem;
+        }
+      }
+
+      .no-scrollbar::-webkit-scrollbar {
+        display: none;
+      }
+      .no-scrollbar {
+        -ms-overflow-style: none;
+        scrollbar-width: none;
+      }
+
+      .bg-ecogrid {
+        background-color: #f4f7f5;
+        background-image:
+          radial-gradient(at 15% 0%, rgba(159, 232, 112, 0.14) 0px, transparent 48%),
+          radial-gradient(at 88% 8%, rgba(0, 60, 51, 0.08) 0px, transparent 42%),
+          radial-gradient(rgba(0, 60, 51, 0.06) 1px, transparent 1px);
+        background-size: 100% 100%, 100% 100%, 24px 24px;
       }
 
       button:focus-visible,
@@ -186,7 +209,7 @@
     </style>
   </head>
   <body
-    class="min-h-full font-sans text-txprimary antialiased bg-canvas selection:bg-[#9fe870] selection:text-[#003c33]"
+    class="min-h-full flex flex-col font-sans text-txprimary antialiased bg-ecogrid selection:bg-[#9fe870] selection:text-[#003c33]"
     x-data="ghgApp()"
     x-init="initApp()"
   >
@@ -194,7 +217,27 @@
     @include('forms.partials.header')
 
     <!-- MAIN BODY CONTENT -->
-    @yield('content')
+    <div class="flex-1">
+      @yield('content')
+    </div>
+
+    <!-- OFFICIAL FOOTER -->
+    <footer class="mt-10 border-t border-borderui/80 bg-white/75 backdrop-blur-sm print:hidden">
+      <div class="max-w-7xl mx-auto px-4 sm:px-6 py-5 flex flex-col sm:flex-row items-center justify-between gap-3 text-xs text-txsecondary">
+        <div class="flex items-center gap-2 text-center sm:text-left">
+          <span class="w-2 h-2 rounded-full bg-[#003c33] shrink-0 hidden sm:inline-block"></span>
+          <span>
+            <strong class="text-[#003c33] font-bold">Sở Công Thương TP. Hồ Chí Minh</strong>
+            — Hệ thống Tiếp nhận Số liệu Kiểm kê Khí nhà kính
+          </span>
+        </div>
+        <div class="flex flex-wrap items-center justify-center gap-x-4 gap-y-1">
+          <a href="mailto:hotro@soct.gov.vn" class="hover:text-[#003c33] transition-colors">hotro@soct.gov.vn</a>
+          <span class="text-borderui">•</span>
+          <a href="tel:02838296322" class="hover:text-[#003c33] transition-colors">Hotline: (028) 38.296.322</a>
+        </div>
+      </div>
+    </footer>
 
     <!-- MODALS -->
     @include('forms.partials.modals.delete-source-modal')

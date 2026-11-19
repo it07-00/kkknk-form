@@ -12,12 +12,17 @@ use Filament\Resources\Resource;
 use Filament\Schemas\Schema;
 use Filament\Support\Icons\Heroicon;
 use Filament\Tables\Table;
+use UnitEnum;
 
 class GhgSubmissionResource extends Resource
 {
     protected static ?string $model = GhgSubmission::class;
 
     protected static string|BackedEnum|null $navigationIcon = Heroicon::OutlinedRectangleStack;
+
+    protected static string|UnitEnum|null $navigationGroup = 'Quản lý hồ sơ';
+
+    protected static ?int $navigationSort = 1;
 
     protected static ?string $recordTitleAttribute = 'code';
 
@@ -26,6 +31,20 @@ class GhgSubmissionResource extends Resource
     protected static ?string $pluralModelLabel = 'Hồ sơ kiểm kê';
 
     protected static ?string $navigationLabel = 'Hồ sơ kiểm kê';
+
+    public static function getNavigationBadge(): ?string
+    {
+        $pendingCount = static::getModel()::query()
+            ->whereIn('status', ['submitted', 'needs_revision'])
+            ->count();
+
+        return $pendingCount > 0 ? (string) $pendingCount : null;
+    }
+
+    public static function getNavigationBadgeColor(): string|array|null
+    {
+        return 'warning';
+    }
 
     public static function infolist(Schema $schema): Schema
     {

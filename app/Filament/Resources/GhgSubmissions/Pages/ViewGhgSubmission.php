@@ -7,6 +7,7 @@ use App\GhgSubmissionStatus;
 use App\Models\GhgSubmission;
 use Filament\Actions\Action;
 use Filament\Forms\Components\Select;
+use Filament\Forms\Components\Textarea;
 use Filament\Resources\Pages\ViewRecord;
 use Illuminate\Support\Facades\Gate;
 use Illuminate\Validation\Rule;
@@ -21,8 +22,10 @@ class ViewGhgSubmission extends ViewRecord
             Action::make('updateStatus')
                 ->label('Cập nhật trạng thái')
                 ->icon('heroicon-o-pencil-square')
+                ->visible(fn (GhgSubmission $record): bool => Gate::allows('update', $record))
                 ->fillForm(fn (GhgSubmission $record): array => [
                     'status' => $record->status->value,
+                    'review_note' => $record->review_note,
                 ])
                 ->schema([
                     Select::make('status')
@@ -30,6 +33,11 @@ class ViewGhgSubmission extends ViewRecord
                         ->options(GhgSubmissionStatus::class)
                         ->rules([Rule::enum(GhgSubmissionStatus::class)])
                         ->required(),
+                    Textarea::make('review_note')
+                        ->label('Ghi chú xử lý')
+                        ->placeholder('Nhập ghi chú hoặc nội dung yêu cầu doanh nghiệp bổ sung (nếu có)')
+                        ->rows(3)
+                        ->maxLength(2000),
                 ])
                 ->action(function (array $data, GhgSubmission $record): void {
                     Gate::authorize('update', $record);
@@ -38,21 +46,28 @@ class ViewGhgSubmission extends ViewRecord
                         ? $data['status']
                         : GhgSubmissionStatus::from($data['status']);
 
+                    $reviewNote = is_string($data['review_note'] ?? null)
+                        ? trim($data['review_note'])
+                        : null;
+
                     $record->update([
                         'status' => $status,
                         'reviewed_by' => auth()->id(),
                         'reviewed_at' => now(),
+                        'review_note' => $reviewNote !== '' ? $reviewNote : null,
                     ]);
                 })
                 ->successNotificationTitle('Đã cập nhật trạng thái hồ sơ'),
             Action::make('downloadExcel')
                 ->label('Tải Excel')
                 ->icon('heroicon-o-arrow-down-tray')
+                ->visible(fn (): bool => auth()->user()?->hasPermissionOrLegacyAdmin('submissions.export') ?? false)
                 ->url(fn (GhgSubmission $record): string => route('admin.ghg-submissions.excel.download', $record)),
             Action::make('downloadReport')
                 ->label('Tải báo cáo đã nộp')
                 ->icon('heroicon-o-document-arrow-down')
-                ->visible(fn (GhgSubmission $record): bool => $record->mitigation_report_path !== null)
+                ->visible(fn (GhgSubmission $record): bool => $record->mitigation_report_path !== null
+                    && (auth()->user()?->hasPermissionOrLegacyAdmin('submissions.download_report') ?? false))
                 ->url(fn (GhgSubmission $record): string => route('admin.ghg-submissions.report.download', $record)),
         ];
     }

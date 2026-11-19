@@ -5,6 +5,7 @@ namespace App\Http\Controllers\Admin;
 use App\Http\Controllers\Controller;
 use App\Models\GhgSubmission;
 use App\Services\GhgSubmissionExcelExporter;
+use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Storage;
 use Symfony\Component\HttpFoundation\BinaryFileResponse;
 use Symfony\Component\HttpFoundation\StreamedResponse;
@@ -12,9 +13,12 @@ use Symfony\Component\HttpFoundation\StreamedResponse;
 class GhgSubmissionDownloadController extends Controller
 {
     public function excel(
+        Request $request,
         GhgSubmission $submission,
         GhgSubmissionExcelExporter $exporter
     ): BinaryFileResponse {
+        abort_unless($request->user()?->hasPermissionOrLegacyAdmin('submissions.export'), 403);
+
         $path = $exporter->export($submission);
 
         return response()->download(
@@ -24,8 +28,10 @@ class GhgSubmissionDownloadController extends Controller
         )->deleteFileAfterSend();
     }
 
-    public function report(GhgSubmission $submission): StreamedResponse
+    public function report(Request $request, GhgSubmission $submission): StreamedResponse
     {
+        abort_unless($request->user()?->hasPermissionOrLegacyAdmin('submissions.download_report'), 403);
+
         $path = $submission->mitigation_report_path;
 
         abort_if($path === null || Storage::disk('local')->missing($path), 404);

@@ -27,7 +27,14 @@ class AdminPanelProvider extends PanelProvider
             ->id('admin')
             ->path('admin')
             ->login()
-            ->brandName('Quản lý hồ sơ KKKNK')
+            ->brandName('Cổng Quản lý KKKNK — Sở Công Thương')
+            ->font('Be Vietnam Pro')
+            ->sidebarCollapsibleOnDesktop()
+            ->spa()
+            ->navigationGroups([
+                'Quản lý hồ sơ',
+                'Hệ thống & Phân quyền',
+            ])
             ->colors([
                 'primary' => Color::Emerald,
             ])

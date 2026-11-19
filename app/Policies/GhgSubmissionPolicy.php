@@ -12,7 +12,7 @@ class GhgSubmissionPolicy
      */
     public function viewAny(User $user): bool
     {
-        return $user->isAdmin();
+        return $user->hasPermissionOrLegacyAdmin('submissions.view');
     }
 
     /**
@@ -20,7 +20,7 @@ class GhgSubmissionPolicy
      */
     public function view(User $user, GhgSubmission $ghgSubmission): bool
     {
-        return $user->isAdmin();
+        return $user->hasPermissionOrLegacyAdmin('submissions.view');
     }
 
     /**
@@ -36,7 +36,7 @@ class GhgSubmissionPolicy
      */
     public function update(User $user, GhgSubmission $ghgSubmission): bool
     {
-        return $user->isAdmin();
+        return $user->hasPermissionOrLegacyAdmin('submissions.review');
     }
 
     /**

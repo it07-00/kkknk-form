@@ -1,6 +1,6 @@
 <div x-show="currentStep === 2" x-cloak class="space-y-6">
               <div
-                class="bg-surface rounded-3xl border border-borderui p-7 sm:p-9 shadow-card space-y-7"
+                class="bg-surface rounded-2xl sm:rounded-3xl border border-borderui p-4 sm:p-7 lg:p-9 shadow-card space-y-6 sm:space-y-7"
               >
                 <!-- Section Header -->
                 <div class="border-b border-borderui pb-5">
@@ -26,7 +26,7 @@
                   </label>
 
                   <div
-                    class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-4 pt-3"
+                    class="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-3 gap-4 pt-3"
                     role="radiogroup"
                     aria-labelledby="reporting_period_label"
                   >
@@ -38,8 +38,8 @@
                       :aria-checked="reportingOption === '2024'"
                       @keydown.space.prevent="selectReportingOption('2024')"
                       @keydown.enter.prevent="selectReportingOption('2024')"
-                      class="relative p-5 rounded-2xl border-2 cursor-pointer transition-all duration-200 flex flex-col justify-between"
-                      :class="reportingOption === '2024' ? 'border-[#003c33] bg-[#003c33]/5 ring-1 ring-[#003c33] shadow-card' : 'border-borderui bg-white hover:border-[#003c33]/30 hover:bg-[#F8FAF9]'"
+                      class="relative p-5 rounded-2xl border-2 cursor-pointer transition-all duration-200 flex flex-col justify-between hover:-translate-y-0.5"
+                      :class="reportingOption === '2024' ? 'border-[#003c33] bg-gradient-to-br from-[#003c33]/[0.06] to-[#9fe870]/[0.08] ring-1 ring-[#003c33] shadow-card' : 'border-borderui bg-white hover:bg-[#F8FAF9] hover:shadow-subtle'"
                     >
                       <div class="flex items-start justify-between">
                         <div
@@ -79,8 +79,8 @@
                       :aria-checked="reportingOption === '2025'"
                       @keydown.space.prevent="selectReportingOption('2025')"
                       @keydown.enter.prevent="selectReportingOption('2025')"
-                      class="relative p-5 rounded-2xl border-2 cursor-pointer transition-all duration-200 flex flex-col justify-between"
-                      :class="reportingOption === '2025' ? 'border-[#003c33] bg-[#003c33]/5 ring-1 ring-[#003c33] shadow-card' : 'border-borderui bg-white hover:border-[#003c33]/30 hover:bg-[#F8FAF9]'"
+                      class="relative p-5 rounded-2xl border-2 cursor-pointer transition-all duration-200 flex flex-col justify-between hover:-translate-y-0.5"
+                      :class="reportingOption === '2025' ? 'border-[#003c33] bg-gradient-to-br from-[#003c33]/[0.06] to-[#9fe870]/[0.08] ring-1 ring-[#003c33] shadow-card' : 'border-borderui bg-white hover:bg-[#F8FAF9] hover:shadow-subtle'"
                     >
                       <div class="flex items-start justify-between">
                         <div
@@ -120,8 +120,8 @@
                       :aria-checked="reportingOption === '2026'"
                       @keydown.space.prevent="selectReportingOption('2026')"
                       @keydown.enter.prevent="selectReportingOption('2026')"
-                      class="relative p-5 rounded-2xl border-2 cursor-pointer transition-all duration-200 flex flex-col justify-between"
-                      :class="reportingOption === '2026' ? 'border-[#003c33] bg-[#003c33]/5 ring-1 ring-[#003c33] shadow-card' : 'border-borderui bg-white hover:border-[#003c33]/30 hover:bg-[#F8FAF9]'"
+                      class="relative p-5 rounded-2xl border-2 cursor-pointer transition-all duration-200 flex flex-col justify-between hover:-translate-y-0.5"
+                      :class="reportingOption === '2026' ? 'border-[#003c33] bg-gradient-to-br from-[#003c33]/[0.06] to-[#9fe870]/[0.08] ring-1 ring-[#003c33] shadow-card' : 'border-borderui bg-white hover:bg-[#F8FAF9] hover:shadow-subtle'"
                     >
                       <div class="flex items-start justify-between">
                         <div class="w-11 h-11 rounded-2xl bg-[#003c33]/10 text-[#003c33] flex items-center justify-center font-bold shrink-0">
@@ -155,8 +155,8 @@
                       :aria-checked="reportingOption === 'both'"
                       @keydown.space.prevent="selectReportingOption('both')"
                       @keydown.enter.prevent="selectReportingOption('both')"
-                      class="relative p-5 rounded-2xl border-2 cursor-pointer transition-all duration-200 flex flex-col justify-between"
-                      :class="reportingOption === 'both' ? 'border-[#003c33] bg-[#003c33]/5 ring-1 ring-[#003c33] shadow-card' : 'border-borderui bg-white hover:border-[#003c33]/30 hover:bg-[#F8FAF9]'"
+                      class="relative p-5 rounded-2xl border-2 cursor-pointer transition-all duration-200 flex flex-col justify-between hover:-translate-y-0.5"
+                      :class="reportingOption === 'both' ? 'border-[#003c33] bg-gradient-to-br from-[#003c33]/[0.06] to-[#9fe870]/[0.08] ring-1 ring-[#003c33] shadow-card' : 'border-borderui bg-white hover:bg-[#F8FAF9] hover:shadow-subtle'"
                     >
                       <span
                         class="absolute -top-3 left-1/2 -translate-x-1/2 px-2.5 py-0.5 rounded-full text-[11px] font-bold tracking-wide uppercase bg-[#9fe870] text-[#003c33] border border-[#003c33]/15 shadow-sm whitespace-nowrap z-10"
@@ -201,8 +201,8 @@
                       :aria-checked="reportingOption === '2024_2026'"
                       @keydown.space.prevent="selectReportingOption('2024_2026')"
                       @keydown.enter.prevent="selectReportingOption('2024_2026')"
-                      class="relative p-5 rounded-2xl border-2 cursor-pointer transition-all duration-200 flex flex-col justify-between"
-                      :class="reportingOption === '2024_2026' ? 'border-[#003c33] bg-[#003c33]/5 ring-1 ring-[#003c33] shadow-card' : 'border-borderui bg-white hover:border-[#003c33]/30 hover:bg-[#F8FAF9]'"
+                      class="relative p-5 rounded-2xl border-2 cursor-pointer transition-all duration-200 flex flex-col justify-between hover:-translate-y-0.5"
+                      :class="reportingOption === '2024_2026' ? 'border-[#003c33] bg-gradient-to-br from-[#003c33]/[0.06] to-[#9fe870]/[0.08] ring-1 ring-[#003c33] shadow-card' : 'border-borderui bg-white hover:bg-[#F8FAF9] hover:shadow-subtle'"
                     >
                       <div class="flex items-start justify-between">
                         <div

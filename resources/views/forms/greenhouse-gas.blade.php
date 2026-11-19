@@ -7,14 +7,14 @@
   @include('forms.partials.success-receipt')
 
   <!-- MAIN TWO-COLUMN APPLICATION CONTAINER (Form active state) -->
-  <main x-show="!isSubmitted" class="max-w-7xl mx-auto px-4 sm:px-6 py-6 sm:py-8">
-    <div class="grid grid-cols-1 lg:grid-cols-12 gap-6 lg:gap-8 items-start">
+  <main x-show="!isSubmitted" class="max-w-7xl mx-auto px-3.5 sm:px-6 py-4 sm:py-8">
+    <div class="grid grid-cols-1 lg:grid-cols-12 gap-5 lg:gap-8 items-start">
       
       <!-- LEFT SIDEBAR: DESKTOP STEPPER -->
       @include('forms.partials.progress-stepper')
 
       <!-- RIGHT FORM CONTAINER -->
-      <section class="lg:col-span-8 xl:col-span-9 max-w-4xl space-y-6">
+      <section class="lg:col-span-8 xl:col-span-9 w-full max-w-4xl mx-auto lg:mx-0 space-y-5 sm:space-y-6">
         
         <!-- INTRODUCTION NOTICE -->
         @include('forms.partials.intro-card')

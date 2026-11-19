@@ -1,6 +1,6 @@
 <div x-show="currentStep === 5" x-cloak class="space-y-6">
               <div
-                class="bg-surface rounded-3xl border border-borderui p-7 sm:p-9 shadow-card space-y-7"
+                class="bg-surface rounded-2xl sm:rounded-3xl border border-borderui p-4 sm:p-7 lg:p-9 shadow-card space-y-6 sm:space-y-7"
               >
                 <!-- Section Header -->
                 <div class="border-b border-borderui pb-5">
@@ -24,7 +24,7 @@
                 <div class="space-y-6">
                   <template x-for="yr in formData.reporting_years" :key="yr">
                     <div
-                      class="bg-white rounded-2xl border border-borderui p-6 sm:p-7 space-y-6 shadow-subtle hover:border-[#003c33]/30 transition-all"
+                      class="bg-white rounded-2xl border border-borderui p-4 sm:p-6 lg:p-7 space-y-5 sm:space-y-6 shadow-subtle hover:border-[#003c33]/30 transition-all"
                     >
                       <div
                         class="flex items-center justify-between pb-3.5 border-b border-borderui"
@@ -119,7 +119,7 @@
 
                         <!-- Segmented Radio Buttons -->
                         <div
-                          class="grid grid-cols-1 sm:grid-cols-3 gap-4"
+                          class="grid grid-cols-1 md:grid-cols-3 gap-3 sm:gap-4"
                           role="radiogroup"
                           :aria-label="'Hình thức cung cấp báo cáo kiểm kê năm ' + yr"
                         >

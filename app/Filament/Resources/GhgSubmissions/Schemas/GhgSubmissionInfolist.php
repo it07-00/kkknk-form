@@ -70,6 +70,10 @@ class GhgSubmissionInfolist
                         TextEntry::make('reviewer.name')->label('Người xử lý')->placeholder('Chưa xử lý'),
                         TextEntry::make('reviewed_at')->label('Xử lý lúc')->dateTime('d/m/Y H:i')->placeholder('-'),
                         TextEntry::make('mitigation_report_original_name')->label('File báo cáo đã nộp')->placeholder('Không có'),
+                        TextEntry::make('review_note')
+                            ->label('Ghi chú xử lý')
+                            ->placeholder('Không có')
+                            ->columnSpanFull(),
                     ])
                     ->columns(2),
             ])

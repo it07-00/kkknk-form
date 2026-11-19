@@ -89,25 +89,25 @@
 
       <!-- Main Header Content -->
       <div
-        class="max-w-7xl mx-auto px-4 sm:px-6 py-3.5 sm:py-4.5 lg:py-5 flex items-center justify-between gap-4 sm:gap-6"
+        class="max-w-7xl mx-auto px-3.5 sm:px-6 py-2.5 sm:py-4 lg:py-5 flex items-center justify-between gap-2.5 sm:gap-6"
       >
         <!-- Brand & Title Group -->
-        <div class="flex items-center space-x-3.5 sm:space-x-4.5 min-w-0">
+        <div class="flex items-center space-x-2.5 sm:space-x-4.5 min-w-0">
           <!-- Logo Emblem -->
           <a href="{{ url('/') }}" class="relative flex-shrink-0 block group" title="Sở Công Thương TP. Hồ Chí Minh">
             <img
               src="{{ asset('images/logo-so-cong-thuong.png') }}"
               alt="Logo Sở Công Thương TP. Hồ Chí Minh"
-              class="w-14 h-14 sm:w-16 sm:h-16 lg:w-20 lg:h-20 object-contain drop-shadow-md transition-all duration-300 group-hover:scale-105"
+              class="w-11 h-11 sm:w-16 sm:h-16 lg:w-20 lg:h-20 object-contain drop-shadow-md transition-all duration-300 group-hover:scale-105"
             />
           </a>
 
           <!-- Title & Department Info -->
           <div class="min-w-0">
             <!-- Super title + Status Badge inline -->
-            <div class="flex items-center flex-wrap gap-2 sm:gap-2.5 text-xs sm:text-sm mb-1">
+            <div class="flex items-center flex-wrap gap-1.5 sm:gap-2.5 text-xs sm:text-sm mb-0.5 sm:mb-1">
               <span
-                class="font-black uppercase tracking-wider text-[#003c33] text-xs sm:text-sm"
+                class="font-black uppercase tracking-wider text-[#003c33] text-[11px] sm:text-sm"
               >
                 <span class="sm:hidden">SỞ CÔNG THƯƠNG TP.HCM</span>
                 <span class="hidden sm:inline"
@@ -118,7 +118,7 @@
 
               <!-- Status Badge (Integrated right into agency row) -->
               <span
-                class="inline-flex items-center gap-1.5 px-3 py-0.5 sm:py-1 rounded-full text-xs font-semibold transition-all shadow-2xs"
+                class="inline-flex items-center gap-1.5 px-2.5 sm:px-3 py-0.5 sm:py-1 rounded-full text-[11px] sm:text-xs font-semibold transition-all shadow-2xs"
                 :class="isSubmitted ? 'bg-emerald-50 text-emerald-800 border border-emerald-300' : 'bg-[#EBF5F0] text-[#003c33] border border-[#003c33]/15'"
               >
                 <span class="relative flex h-2 w-2">
@@ -139,7 +139,7 @@
 
             <!-- Document Title -->
             <h1
-              class="text-base sm:text-lg lg:text-xl xl:text-2xl font-black text-[#0e271f] tracking-tight leading-snug"
+              class="text-sm sm:text-lg lg:text-xl xl:text-2xl font-black text-[#0e271f] tracking-tight leading-snug line-clamp-2 sm:line-clamp-none"
             >
               BẢNG CUNG CẤP SỐ LIỆU KIỂM KÊ KHÍ NHÀ KÍNH VÀ KẾ HOẠCH GIẢM NHẸ
             </h1>
@@ -147,7 +147,7 @@
         </div>
 
         <!-- Header Right: Progress & Actions -->
-        <div class="flex items-center space-x-3 sm:space-x-3.5 flex-shrink-0">
+        <div class="flex items-center space-x-2 sm:space-x-3.5 flex-shrink-0">
           <!-- Progress Pill with Inline Percentage & Mini Progress Bar (Desktop & Tablet) -->
           <div
             class="hidden sm:inline-flex items-center gap-3 px-3.5 sm:px-4 py-2 rounded-2xl bg-[#F0F6F3] border border-[#003c33]/15 text-xs sm:text-sm shadow-2xs"
@@ -186,24 +186,51 @@
         </div>
       </div>
 
-      <!-- Mobile Progress Tracker Bar (compact single row on mobile) -->
+      <!-- Mobile & Tablet Interactive Stepper Bar (shown below lg breakpoint) -->
       <div
-        class="md:hidden border-t border-borderui/60 bg-white/95 px-4 py-1.5 flex items-center justify-between text-xs"
+        x-show="!isSubmitted"
+        class="lg:hidden border-t border-borderui/60 bg-white/95 px-3.5 sm:px-6 py-2 space-y-2"
       >
-        <div class="flex items-center space-x-2 font-medium text-txprimary">
+        <div class="flex items-center justify-between text-xs">
+          <div class="flex items-center space-x-2 font-medium text-txprimary min-w-0">
+            <span
+              class="px-2 py-0.5 rounded-md bg-[#003c33] text-[#9fe870] font-mono font-bold text-xs shrink-0"
+              x-text="'Bước ' + currentStep + '/7'"
+            ></span>
+            <span
+              class="truncate font-semibold"
+              x-text="steps[currentStep-1].title"
+            ></span>
+          </div>
           <span
-            class="px-2 py-0.5 rounded-md bg-[#003c33] text-[#9fe870] font-mono font-bold text-xs"
-            x-text="'Bước ' + currentStep + '/7'"
-          ></span>
-          <span
-            class="truncate max-w-[200px]"
-            x-text="steps[currentStep-1].title"
+            class="font-mono font-bold text-[#003c33] shrink-0 ml-2"
+            x-text="stepProgressPercent + '%'"
           ></span>
         </div>
-        <span
-          class="font-mono font-bold text-[#003c33]"
-          x-text="stepProgressPercent + '%'"
-        ></span>
+        <nav aria-label="Tiến trình các bước" class="flex items-center gap-1.5 overflow-x-auto no-scrollbar pb-0.5">
+          <template x-for="st in steps" :key="'mob-step-' + st.number">
+            <button
+              type="button"
+              @click="jumpToStep(st.number)"
+              :disabled="!canNavigateTo(st.number)"
+              :aria-current="currentStep === st.number ? 'step' : null"
+              :class="{
+                'bg-[#003c33] text-white border-[#003c33] shadow-2xs': currentStep === st.number,
+                'bg-[#F0F6F3] text-[#003c33] border-[#003c33]/25': completedSteps.includes(st.number) && currentStep !== st.number,
+                'bg-white text-txprimary border-borderui': canNavigateTo(st.number) && !completedSteps.includes(st.number) && currentStep !== st.number,
+                'bg-slate-50 text-slate-400 border-slate-200 opacity-60 cursor-not-allowed': !canNavigateTo(st.number)
+              }"
+              class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-lg border text-xs font-semibold whitespace-nowrap shrink-0 transition-colors"
+            >
+              <span
+                class="w-4 h-4 rounded-full flex items-center justify-center text-[10px] font-mono font-bold"
+                :class="currentStep === st.number ? 'bg-[#9fe870] text-[#003c33]' : (completedSteps.includes(st.number) ? 'bg-[#003c33] text-[#9fe870]' : 'bg-slate-100 text-txsecondary')"
+                x-text="st.number"
+              ></span>
+              <span x-text="st.title"></span>
+            </button>
+          </template>
+        </nav>
       </div>
 
       <!-- Global Slim Progress Line right under header -->

@@ -8,6 +8,7 @@ use Illuminate\Console\Attributes\Signature;
 use Illuminate\Console\Command;
 use Illuminate\Support\Facades\Validator;
 use Illuminate\Validation\Rules\Password;
+use Spatie\Permission\Models\Role;
 
 #[Signature('admin:create
             {email : Địa chỉ email đăng nhập}
@@ -49,6 +50,10 @@ class CreateAdminUser extends Command
             ['name' => $name, 'password' => $password]
         );
         $user->forceFill(['is_admin' => true])->save();
+
+        if (Role::query()->where('name', 'super_admin')->exists()) {
+            $user->assignRole('super_admin');
+        }
 
         $this->info("Đã tạo tài khoản quản trị: {$user->email}");
 
